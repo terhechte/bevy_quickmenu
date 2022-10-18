@@ -57,70 +57,6 @@ impl Screens {
     }
 }
 
-// enum StackEntry {
-//     Menu(Box<dyn Fn(&mut Ui, Option<CursorDirection>) -> Option<Actions>>),
-//     View(Box<dyn Fn(&mut Ui)>),
-// }
-
-// impl std::fmt::Debug for StackEntry {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Self::Menu(_) => f.debug_tuple("Menu").finish(),
-//             Self::View(_) => f.debug_tuple("View").finish(),
-//         }
-//     }
-// }
-
-// fn logic(stack: &mut Vec<StackEntry>, input: Option<CursorDirection>, next: Option<Actions>) {
-//     // let action = match input {
-//     //     Some(CursorDirection::Back) =
-//     // }
-// }
-
-// impl eframe::App for MyApp {
-//     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-//         egui::CentralPanel::default().show(ctx, |ui| {
-//             // fixme: this has to come in somehow different
-//             let cursor_direction = if ui.ctx().input().key_pressed(Key::ArrowDown) {
-//                 Some(CursorDirection::Down)
-//             } else if ui.ctx().input().key_pressed(Key::ArrowUp) {
-//                 Some(CursorDirection::Up)
-//             } else if ui.ctx().input().key_pressed(Key::Enter) {
-//                 Some(CursorDirection::Select)
-//             } else {
-//                 None
-//             };
-
-//             if ui.ctx().input().key_pressed(Key::Backspace) {
-//                 self.stack.pop();
-//             }
-
-//             let mut next_menu: Option<Actions> = None;
-
-//             ui.horizontal(|ui| {
-//                 for (index, entry) in self.stack.iter().enumerate() {
-//                     let is_last = (index + 1) == self.stack.len();
-//                     let cursor_direction = if is_last { cursor_direction } else { None };
-//                     match entry {
-//                         StackEntry::Menu(menu) => {
-//                             if let Some(next) = menu(ui, cursor_direction) {
-//                                 if is_last {
-//                                     next_menu = Some(next);
-//                                 }
-//                             }
-//                         }
-//                         StackEntry::View(view) => view(ui),
-//                     }
-//                 }
-//             });
-
-//             if let Some(n) = next_menu {
-//                 self.stack.push(StackEntry::Menu(Box::new(sound_menu)));
-//             }
-//         });
-//     }
-// }
-
 #[derive(Debug)]
 pub struct NavigationMenu<State: std::fmt::Debug> {
     /// The internal stack of menu screens
@@ -149,23 +85,7 @@ impl<State: std::fmt::Debug> NavigationMenu<State> {
 
 impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
     fn ui(self, ui: &mut Ui) -> Response {
-        // let NavigationMenu {
-        //     stack,
-        //     next_direction,
-        // } = self;
-
-        // let next_direction = if ui.ctx().input().key_pressed(Key::ArrowDown) {
-        //     Some(CursorDirection::Down)
-        // } else if ui.ctx().input().key_pressed(Key::ArrowUp) {
-        //     Some(CursorDirection::Up)
-        // } else if ui.ctx().input().key_pressed(Key::Enter) {
-        //     Some(CursorDirection::Select)
-        // } else {
-        //     None
-        // };
         let next_direction = self.next_direction.take();
-
-        // println!("action: {next_direction:?}");
 
         if let Some(CursorDirection::Back) = next_direction {
             self.stack.pop();
@@ -178,7 +98,6 @@ impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
                 let is_last = (index + 1) == self.stack.len();
                 let cursor_direction = if is_last { next_direction } else { None };
                 if let Some(next) = entry.resolve(ui, &mut self.state, cursor_direction) {
-                    println!("into {next:?}");
                     if is_last {
                         next_menu = Some(next);
                     }
@@ -197,20 +116,6 @@ impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
         response.inner
     }
 }
-
-// impl NavigationMenu {
-//     fn pre_process(&mut self) {
-//         match self.next_direction {
-//             Some(CursorDirection::Back) => {
-//                 self.stack.pop();
-//                 self.next_direction = None;
-//             }
-//             _ => (),
-//         }
-//     }
-
-//     fn post_process(&mut self) {}
-// }
 
 fn root_menu(ui: &mut Ui, cursor_direction: Option<CursorDirection>) -> Option<MenuSelection> {
     make_menu(
@@ -236,18 +141,6 @@ fn sound_menu(ui: &mut Ui, cursor_direction: Option<CursorDirection>) -> Option<
         ],
     )
 }
-
-// fn players_menu(ui: &mut Ui, cursor_direction: Option<CursorDirection>) -> Option<Actions> {
-//     make_menu(
-//         ui,
-//         Id::new("player-menu"),
-//         cursor_direction,
-//         vec![
-//             MenuItem::new("Player 1", Actions::Player(1)),
-//             MenuItem::new("Player 2", Actions::Player(2)),
-//         ],
-//     )
-// }
 
 fn make_menu(
     ui: &mut Ui,
