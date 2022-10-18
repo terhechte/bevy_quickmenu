@@ -146,14 +146,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "argh"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_egui",
-]
-
-[[package]]
 name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -547,6 +539,14 @@ dependencies = [
 [[package]]
 name = "bevy_ptr"
 version = "0.9.0-dev"
+
+[[package]]
+name = "bevy_quickmenu"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+]
 
 [[package]]
 name = "bevy_reflect"

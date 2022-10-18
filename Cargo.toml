@@ -1,5 +1,5 @@
 [package]
-name = "argh"
+name = "bevy_quickmenu"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 bevy = { path = "../bevy9/bevy" }
 bevy_egui = { path = "../bevy9/bevy_egui" }
+
+[dev-dependencies]
+bevy = { path = "../bevy9/bevy" }

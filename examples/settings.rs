@@ -1,12 +1,16 @@
 use bevy::prelude::*;
-use bevy_egui::{
-    egui::{self, *},
-    *,
+
+use bevy_quickmenu::{
+    egui::*, make_menu, ActionTrait, CursorDirection, MenuItem, MenuSelection, QuickMenuPlugin,
+    ScreenTrait, SettingsState,
 };
 
-use crate::navigation_menu::{
-    make_menu, ActionTrait, CursorDirection, MenuItem, MenuSelection, NavigationMenu, ScreenTrait,
-};
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugin(SettingsPlugin)
+        .run();
+}
 
 #[derive(Debug)]
 enum MyEvent {
@@ -16,69 +20,43 @@ enum MyEvent {
 #[derive(Debug, Clone)]
 struct CustomState {}
 
-#[derive(Resource)]
-struct SettingsState {
-    menu: NavigationMenu<CustomState, Actions, Screens>,
-}
-
 pub struct SettingsPlugin;
 
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SettingsState {
-            menu: NavigationMenu::new(CustomState {}, Screens::Root),
-        })
-        .add_event::<MyEvent>()
-        .add_plugin(EguiPlugin)
-        .add_startup_system(setup_settings)
-        .add_system_set(
-            SystemSet::new()
-                .with_system(ui_settings_system)
-                .with_system(input_system)
-                .with_system(crate::systems::keyboard_input_system)
-                .with_system(event_reader),
-        );
+        app.insert_resource(SettingsState::new(CustomState {}, Screens::Root))
+            .add_event::<MyEvent>()
+            .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
+            .add_system(event_reader);
     }
 }
 
-fn setup_settings(mut commands: Commands, mut egui_context: ResMut<EguiContext>) {
-    //?
-}
+// fn input_system(
+//     mut reader: EventReader<CursorDirection>,
+//     mut settings_state: ResMut<SettingsState>,
+// ) {
+//     if let Some(event) = reader.iter().next() {
+//         settings_state.menu.next(*event)
+//     }
+// }
 
-fn input_system(
-    mut reader: EventReader<CursorDirection>,
-    mut settings_state: ResMut<SettingsState>,
-) {
-    if let Some(event) = reader.iter().next() {
-        settings_state.menu.next(*event)
-    }
-}
-
-fn ui_settings_system(
-    mut commands: Commands,
-    mut egui_context: ResMut<EguiContext>,
-    mut settings_state: ResMut<SettingsState>,
-    mut event_writer: EventWriter<MyEvent>,
-) {
-    egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
-        settings_state.menu.show(ui, &mut event_writer);
-    });
-}
-
-// Menus
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum ControlDevice {
-    Keyboard(usize),
-    Gamepad(usize),
-}
+// fn ui_settings_system(
+//     mut commands: Commands,
+//     mut egui_context: ResMut<EguiContext>,
+//     mut settings_state: ResMut<SettingsState>,
+//     mut event_writer: EventWriter<MyEvent>,
+// ) {
+//     egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
+//         settings_state.menu.show(ui, &mut event_writer);
+//     });
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Actions {
     Close,
     SoundOn,
     SoundOff,
-    Control(usize, ControlDevice),
+    // Control(usize, ControlDevice),
 }
 
 impl ActionTrait for Actions {
@@ -90,7 +68,7 @@ impl ActionTrait for Actions {
             Actions::Close => return,
             Actions::SoundOn => return,
             Actions::SoundOff => return,
-            Actions::Control(_, _) => return,
+            // Actions::Control(_, _) => return,
         }
     }
 }
@@ -109,7 +87,7 @@ impl ScreenTrait for Screens {
     fn resolve(
         &self,
         ui: &mut Ui,
-        state: &mut CustomState,
+        _state: &mut CustomState,
         cursor_direction: Option<CursorDirection>,
     ) -> Option<MenuSelection<Actions, Screens, CustomState>> {
         match self {
