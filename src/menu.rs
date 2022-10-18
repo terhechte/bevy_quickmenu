@@ -1,89 +1,99 @@
+use bevy::prelude::EventWriter;
 use bevy_egui::egui::{self, *};
+use std::fmt::Debug;
+use std::hash::Hash;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum MenuSelection {
-    Action(Actions),
-    Screen(Screens),
+pub trait ActionTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
+    type State;
+    fn handle(&self, state: &mut Self::State);
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum ControlDevice {
-    Keyboard(usize),
-    Gamepad(usize),
+pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
+    type Action: ActionTrait;
+    fn resolve(
+        &self,
+        ui: &mut Ui,
+        state: &mut <<Self as ScreenTrait>::Action as ActionTrait>::State,
+        cursor_direction: Option<CursorDirection>,
+    ) -> Option<
+        MenuSelection<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>,
+    >;
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum Actions {
-    Close,
-    SoundOn,
-    SoundOff,
-    Control(usize, ControlDevice),
+#[derive(Debug)]
+pub enum MenuSelection<A, S, State>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    Action(A),
+    Screen(S),
 }
 
-impl Actions {
-    fn handle<State>(&self, state: &mut State) {
+impl<A, S, State> Clone for MenuSelection<A, S, State>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    fn clone(&self) -> Self {
         match self {
-            Actions::Close => return,
-            Actions::SoundOn => return,
-            Actions::SoundOff => return,
-            Actions::Control(_, _) => return,
+            Self::Action(arg0) => Self::Action(*arg0),
+            Self::Screen(arg0) => Self::Screen(*arg0),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum Screens {
-    Root,
-    Players,
-    Controls,
-    Sound,
-    Player(usize),
-}
-
-impl Screens {
-    fn resolve<State>(
-        &self,
-        ui: &mut Ui,
-        state: &mut State,
-        cursor_direction: Option<CursorDirection>,
-    ) -> Option<MenuSelection> {
-        match self {
-            Screens::Root => root_menu(ui, cursor_direction),
-            Screens::Players => sound_menu(ui, cursor_direction),
-            Screens::Controls => sound_menu(ui, cursor_direction),
-            Screens::Sound => sound_menu(ui, cursor_direction),
-            Screens::Player(_) => sound_menu(ui, cursor_direction),
+impl<A, S, State> PartialEq for MenuSelection<A, S, State>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (MenuSelection::Action(a1), MenuSelection::Action(a2)) => a1 == a2,
+            (MenuSelection::Screen(s1), MenuSelection::Screen(s2)) => s1 == s2,
+            _ => false,
         }
     }
 }
 
 #[derive(Debug)]
-pub struct NavigationMenu<State: std::fmt::Debug> {
+pub struct NavigationMenu<State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
     /// The internal stack of menu screens
-    stack: Vec<Screens>,
+    stack: Vec<S>,
     /// Any user input (cursor keys, gamepad) is set here
     next_direction: Option<CursorDirection>,
     /// The custom state
     state: State,
 }
 
-impl<State: std::fmt::Debug> NavigationMenu<State> {
-    pub fn new(state: State) -> Self {
+impl<State, A, S> NavigationMenu<State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    pub fn new(state: State, root: S) -> Self {
         Self {
-            stack: vec![Screens::Root],
+            stack: vec![root],
             next_direction: None,
             state,
         }
     }
-}
 
-impl<State: std::fmt::Debug> NavigationMenu<State> {
     pub fn next(&mut self, direction: CursorDirection) {
         self.next_direction = Some(direction);
     }
 }
 
-impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
+impl<State, A, S> Widget for &mut NavigationMenu<State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
     fn ui(self, ui: &mut Ui) -> Response {
         let next_direction = self.next_direction.take();
 
@@ -91,7 +101,7 @@ impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
             self.stack.pop();
         }
 
-        let mut next_menu: Option<MenuSelection> = None;
+        let mut next_menu: Option<MenuSelection<A, S, State>> = None;
 
         let response = ui.horizontal(|ui| {
             for (index, entry) in self.stack.iter().enumerate() {
@@ -117,38 +127,18 @@ impl<State: std::fmt::Debug> Widget for &mut NavigationMenu<State> {
     }
 }
 
-fn root_menu(ui: &mut Ui, cursor_direction: Option<CursorDirection>) -> Option<MenuSelection> {
-    make_menu(
-        ui,
-        Id::new("root"),
-        cursor_direction,
-        vec![
-            MenuItem::action("Back", Actions::Close),
-            MenuItem::screen("Sound", Screens::Sound),
-            MenuItem::screen("Controls", Screens::Controls),
-        ],
-    )
-}
-
-fn sound_menu(ui: &mut Ui, cursor_direction: Option<CursorDirection>) -> Option<MenuSelection> {
-    make_menu(
-        ui,
-        Id::new("sound"),
-        cursor_direction,
-        vec![
-            MenuItem::action("On", Actions::SoundOn),
-            MenuItem::action("Off", Actions::SoundOff),
-        ],
-    )
-}
-
-fn make_menu(
+pub fn make_menu<State, A, S>(
     ui: &mut Ui,
     id: Id,
     cursor_direction: Option<CursorDirection>,
-    items: Vec<MenuItem>,
-) -> Option<MenuSelection> {
-    let mut selection: Option<MenuSelection> = None;
+    items: Vec<MenuItem<State, A, S>>,
+) -> Option<MenuSelection<A, S, State>>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    let mut selection: Option<MenuSelection<A, S, State>> = None;
     ui.add(VerticalMenu {
         id,
         cursor_direction,
@@ -166,21 +156,29 @@ pub enum CursorDirection {
     Back,
 }
 
-enum MenuItem {
-    Screen(WidgetText, Screens),
-    Action(WidgetText, Actions),
+pub enum MenuItem<State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    Screen(WidgetText, S),
+    Action(WidgetText, A),
 }
 
-impl MenuItem {
-    fn screen(s: impl Into<WidgetText>, screen: Screens) -> Self {
+impl<State, A, S> MenuItem<State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
+    pub fn screen(s: impl Into<WidgetText>, screen: S) -> Self {
         MenuItem::Screen(s.into(), screen)
     }
 
-    fn action(s: impl Into<WidgetText>, action: Actions) -> Self {
+    pub fn action(s: impl Into<WidgetText>, action: A) -> Self {
         MenuItem::Action(s.into(), action)
     }
 
-    fn as_selection(&self) -> MenuSelection {
+    fn as_selection(&self) -> MenuSelection<A, S, State> {
         match self {
             MenuItem::Screen(_, a) => MenuSelection::Screen(*a),
             MenuItem::Action(_, a) => MenuSelection::Action(*a),
@@ -195,18 +193,27 @@ impl MenuItem {
     }
 }
 
-struct VerticalMenu<'a> {
+struct VerticalMenu<'a, State, A, S>
+where
+    A: ActionTrait<State = State>,
+    S: ScreenTrait<Action = A>,
+{
     // Each menu needs a distinct id
     id: Id,
     // The last cursor direction we saw
     cursor_direction: Option<CursorDirection>,
     // The items in the menu
-    items: Vec<MenuItem>,
+    items: Vec<MenuItem<State, A, S>>,
     // selection
-    selection: &'a mut Option<MenuSelection>,
+    selection: &'a mut Option<MenuSelection<A, S, State>>,
 }
 
-impl<'a> Widget for VerticalMenu<'a> {
+impl<'a, State, A, S> Widget for VerticalMenu<'a, State, A, S>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
     fn ui(self, ui: &mut Ui) -> Response {
         let VerticalMenu {
             id,
@@ -221,7 +228,7 @@ impl<'a> Widget for VerticalMenu<'a> {
             let mut selected = ui
                 .memory()
                 .data
-                .get_temp::<MenuSelection>(id)
+                .get_temp::<MenuSelection<A, S, State>>(id)
                 .unwrap_or_else(|| items.first().map(MenuItem::as_selection).unwrap());
 
             let mut select_navigation = false;
@@ -245,7 +252,7 @@ impl<'a> Widget for VerticalMenu<'a> {
                 let focussed = selected == item_selection;
                 let response = ui.add(BorderedButton::new(item.text().clone()).focussed(focussed));
                 if response.clicked() || (select_navigation && focussed) {
-                    selected = item_selection;
+                    selected = item_selection.clone();
                     *selection = Some(item_selection);
                 }
             }
