@@ -5,7 +5,8 @@ use std::hash::Hash;
 
 pub trait ActionTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
     type State;
-    fn handle(&self, state: &mut Self::State);
+    type Event: Send + Sync + 'static;
+    fn handle(&self, state: &mut Self::State, event_writer: &mut EventWriter<Self::Event>);
 }
 
 pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
@@ -89,12 +90,12 @@ where
     }
 }
 
-impl<State, A, S> Widget for &mut NavigationMenu<State, A, S>
+impl<State, A, S> NavigationMenu<State, A, S>
 where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
 {
-    fn ui(self, ui: &mut Ui) -> Response {
+    pub fn show(&mut self, ui: &mut Ui, event_writer: &mut EventWriter<A::Event>) {
         let next_direction = self.next_direction.take();
 
         if let Some(CursorDirection::Back) = next_direction {
@@ -103,7 +104,7 @@ where
 
         let mut next_menu: Option<MenuSelection<A, S, State>> = None;
 
-        let response = ui.horizontal(|ui| {
+        ui.horizontal(|ui| {
             for (index, entry) in self.stack.iter().enumerate() {
                 let is_last = (index + 1) == self.stack.len();
                 let cursor_direction = if is_last { next_direction } else { None };
@@ -113,17 +114,14 @@ where
                     }
                 }
             }
-            ui.allocate_response(Vec2::ZERO, Sense::click())
         });
 
         if let Some(n) = next_menu {
             match n {
-                MenuSelection::Action(a) => a.handle(&mut self.state),
+                MenuSelection::Action(a) => a.handle(&mut self.state, event_writer),
                 MenuSelection::Screen(s) => self.stack.push(s),
             }
         }
-
-        response.inner
     }
 }
 

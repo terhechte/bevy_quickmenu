@@ -8,6 +8,11 @@ use crate::menu::{
     make_menu, ActionTrait, CursorDirection, MenuItem, MenuSelection, NavigationMenu, ScreenTrait,
 };
 
+#[derive(Debug)]
+enum MyEvent {
+    Test,
+}
+
 #[derive(Debug, Clone)]
 struct CustomState {}
 
@@ -23,12 +28,14 @@ impl Plugin for SettingsPlugin {
         app.insert_resource(SettingsState {
             menu: NavigationMenu::new(CustomState {}, Screens::Root),
         })
+        .add_event::<MyEvent>()
         .add_plugin(EguiPlugin)
         .add_startup_system(setup_settings)
         .add_system_set(
             SystemSet::new()
                 .with_system(ui_settings_system)
-                .with_system(keyboard_input_system),
+                .with_system(keyboard_input_system)
+                .with_system(event_reader),
         );
     }
 }
@@ -59,9 +66,10 @@ fn ui_settings_system(
     mut commands: Commands,
     mut egui_context: ResMut<EguiContext>,
     mut settings_state: ResMut<SettingsState>,
+    mut event_writer: EventWriter<MyEvent>,
 ) {
     egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
-        ui.add(&mut settings_state.menu)
+        settings_state.menu.show(ui, &mut event_writer);
     });
 }
 
@@ -83,7 +91,9 @@ enum Actions {
 
 impl ActionTrait for Actions {
     type State = CustomState;
-    fn handle(&self, state: &mut CustomState) {
+    type Event = MyEvent;
+    fn handle(&self, state: &mut CustomState, event_writer: &mut EventWriter<MyEvent>) {
+        event_writer.send(MyEvent::Test);
         match self {
             Actions::Close => return,
             Actions::SoundOn => return,
@@ -149,4 +159,10 @@ fn sound_menu(
             MenuItem::action("Off", Actions::SoundOff),
         ],
     )
+}
+
+fn event_reader(mut event_reader: EventReader<MyEvent>) {
+    for event in event_reader.iter() {
+        dbg!(event);
+    }
 }
