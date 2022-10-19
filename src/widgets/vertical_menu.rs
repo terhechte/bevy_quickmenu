@@ -1,4 +1,5 @@
 use crate::{
+    style::Stylesheet,
     types::{CursorDirection, MenuItem, MenuSelection},
     ActionTrait, ScreenTrait,
 };
@@ -19,6 +20,8 @@ where
     pub items: &'a [MenuItem<State, A, S>],
     // selection
     pub selection: &'a mut Option<MenuSelection<A, S, State>>,
+    // stylesheet
+    // pub stylesheet: &'a Stylesheet,
 }
 
 impl<'a, State, A, S> Widget for VerticalMenu<'a, State, A, S>
@@ -33,6 +36,7 @@ where
             cursor_direction,
             items,
             selection,
+            // stylesheet,
         } = self;
         if items.is_empty() {
             return ui.allocate_response(Vec2::ZERO, Sense::click());
@@ -63,7 +67,8 @@ where
             for item in items {
                 let item_selection = item.as_selection();
                 let focussed = selected == item_selection;
-                let response = ui.add(BorderedButton::new(item.text().clone()).focussed(focussed));
+                let response =
+                    ui.add(BorderedButton::new(item.text().clone(), None).set_focus(focussed));
                 if response.clicked() || (select_navigation && focussed) {
                     selected = item_selection.clone();
                     *selection = Some(item_selection);

@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use bevy_quickmenu::{
-    egui::*, make_menu, ActionTrait, CursorDirection, MenuItem, MenuSelection, QuickMenuPlugin,
-    ScreenTrait, SettingsState,
+    egui::*, make_menu, ActionTrait, CursorDirection, Menu, MenuItem, MenuSelection,
+    NavigationMenu, QuickMenuPlugin, ScreenTrait, SettingsState,
 };
 
 fn main() {
@@ -84,51 +84,43 @@ enum Screens {
 
 impl ScreenTrait for Screens {
     type Action = Actions;
-    fn resolve(
-        &self,
-        ui: &mut Ui,
-        _state: &mut CustomState,
-        cursor_direction: Option<CursorDirection>,
-    ) -> Option<MenuSelection<Actions, Screens, CustomState>> {
+    fn resolve(&self, state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
         match self {
-            Screens::Root => root_menu(ui, cursor_direction),
-            Screens::Players => sound_menu(ui, cursor_direction),
-            Screens::Controls => sound_menu(ui, cursor_direction),
-            Screens::Sound => sound_menu(ui, cursor_direction),
-            Screens::Player(_) => sound_menu(ui, cursor_direction),
+            Screens::Root => root_menu(state),
+            Screens::Players => sound_menu(state),
+            Screens::Controls => sound_menu(state),
+            Screens::Sound => sound_menu(state),
+            Screens::Player(_) => sound_menu(state),
         }
     }
 }
 
-fn root_menu(
-    ui: &mut Ui,
-    cursor_direction: Option<CursorDirection>,
-) -> Option<MenuSelection<Actions, Screens, CustomState>> {
-    make_menu(
-        ui,
-        Id::new("root"),
-        cursor_direction,
-        &[
+// fn a_screen(
+//     menu: &mut NavigationMenu<CustomState, Actions, Screens>
+// ) -> Option<MenuSelection<Actions, Screens, CustomState>> {
+//     // need a way to wrap the return here without exposing ui
+//     /// ???
+// }
+
+fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+    Menu {
+        id: Id::new("root"),
+        entries: vec![
             MenuItem::action("Back", Actions::Close),
             MenuItem::screen("Sound", Screens::Sound),
             MenuItem::screen("Controls", Screens::Controls),
         ],
-    )
+    }
 }
 
-fn sound_menu(
-    ui: &mut Ui,
-    cursor_direction: Option<CursorDirection>,
-) -> Option<MenuSelection<Actions, Screens, CustomState>> {
-    make_menu(
-        ui,
-        Id::new("sound"),
-        cursor_direction,
-        &[
+fn sound_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+    Menu {
+        id: Id::new("sound"),
+        entries: vec![
             MenuItem::action("On", Actions::SoundOn),
             MenuItem::action("Off", Actions::SoundOff),
         ],
-    )
+    }
 }
 
 fn event_reader(mut event_reader: EventReader<MyEvent>) {

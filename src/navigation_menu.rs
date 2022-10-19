@@ -2,6 +2,8 @@ use bevy::prelude::EventWriter;
 use bevy_egui::egui::Ui;
 use std::fmt::Debug;
 
+use crate::{make_menu, style::Stylesheet};
+
 use super::{
     types::{CursorDirection, MenuSelection},
     ActionTrait, ScreenTrait,
@@ -19,6 +21,8 @@ where
     next_direction: Option<CursorDirection>,
     /// The custom state
     state: State,
+    /// The style to use
+    style: Stylesheet,
 }
 
 impl<State, A, S> NavigationMenu<State, A, S>
@@ -31,18 +35,24 @@ where
             stack: vec![root],
             next_direction: None,
             state,
+            style: Stylesheet::default(),
         }
     }
 
     pub fn next(&mut self, direction: CursorDirection) {
         self.next_direction = Some(direction);
     }
+
+    pub fn set_style(&mut self, style: Stylesheet) {
+        self.style = style;
+    }
 }
 
 impl<State, A, S> NavigationMenu<State, A, S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
 {
     pub fn show(&mut self, ui: &mut Ui, event_writer: &mut EventWriter<A::Event>) {
         let next_direction = self.next_direction.take();
@@ -57,7 +67,10 @@ where
             for (index, entry) in self.stack.iter().enumerate() {
                 let is_last = (index + 1) == self.stack.len();
                 let cursor_direction = if is_last { next_direction } else { None };
-                if let Some(next) = entry.resolve(ui, &mut self.state, cursor_direction) {
+                let menu_desc = entry.resolve(&mut self.state);
+                if let Some(next) =
+                    make_menu(ui, menu_desc.id, cursor_direction, &menu_desc.entries)
+                {
                     if is_last {
                         next_menu = Some(next);
                     }

@@ -1,4 +1,5 @@
 mod navigation_menu;
+mod style;
 mod systems;
 mod types;
 mod widgets;
@@ -8,17 +9,26 @@ use bevy::{
     prelude::{EventWriter, Plugin, Res, Resource, SystemSet},
 };
 use bevy_egui::{
-    egui::{Id, Ui},
+    egui::{Context, Id, Ui},
     EguiPlugin,
 };
-
-pub use bevy_egui::egui;
 
 use std::fmt::Debug;
 use std::hash::Hash;
 
+pub use bevy_egui::egui;
 pub use navigation_menu::NavigationMenu;
 pub use types::{CursorDirection, MenuItem, MenuSelection};
+
+pub struct Menu<A, S, State>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    pub id: Id,
+    pub entries: Vec<MenuItem<State, A, S>>,
+}
 
 pub trait ActionTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
     type State;
@@ -30,12 +40,8 @@ pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
     type Action: ActionTrait;
     fn resolve(
         &self,
-        ui: &mut Ui,
         state: &mut <<Self as ScreenTrait>::Action as ActionTrait>::State,
-        cursor_direction: Option<CursorDirection>,
-    ) -> Option<
-        MenuSelection<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>,
-    >;
+    ) -> Menu<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>;
 }
 
 pub fn make_menu<State, A, S>(
@@ -134,4 +140,22 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     resource.is_some().into()
+}
+
+pub fn register_font(data: &'static [u8], context: Context) {
+    use bevy_egui::egui::{FontData, FontDefinitions, FontFamily};
+
+    let mut fonts = FontDefinitions::default();
+
+    fonts
+        .font_data
+        .insert("custom_font".to_owned(), FontData::from_static(data));
+
+    fonts
+        .families
+        .entry(FontFamily::Proportional)
+        .or_default()
+        .insert(0, "custom_font".to_owned());
+
+    context.set_fonts(fonts);
 }
