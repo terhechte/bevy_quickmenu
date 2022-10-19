@@ -1,8 +1,11 @@
 use bevy::prelude::*;
 
 use bevy_quickmenu::{
-    egui::*, make_menu, ActionTrait, CursorDirection, Menu, MenuItem, MenuSelection,
-    NavigationMenu, QuickMenuPlugin, ScreenTrait, SettingsState,
+    egui::*,
+    make_menu,
+    style::{Style, Stylesheet},
+    ActionTrait, CursorDirection, CustomFontData, Menu, MenuItem, MenuSelection, NavigationMenu,
+    QuickMenuPlugin, ScreenTrait, SettingsState,
 };
 
 fn main() {
@@ -11,6 +14,8 @@ fn main() {
         .add_plugin(SettingsPlugin)
         .run();
 }
+
+const FONT_DATA: &[u8] = include_bytes!("font.ttf");
 
 #[derive(Debug)]
 enum MyEvent {
@@ -24,32 +29,24 @@ pub struct SettingsPlugin;
 
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SettingsState::new(CustomState {}, Screens::Root))
+        let sheet = Stylesheet {
+            button: Some(Style {
+                size: 40.0,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        app.insert_resource(CustomFontData(Some(FONT_DATA)))
+            .insert_resource(SettingsState::new(
+                CustomState {},
+                Screens::Root,
+                Some(sheet),
+            ))
             .add_event::<MyEvent>()
             .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
             .add_system(event_reader);
     }
 }
-
-// fn input_system(
-//     mut reader: EventReader<CursorDirection>,
-//     mut settings_state: ResMut<SettingsState>,
-// ) {
-//     if let Some(event) = reader.iter().next() {
-//         settings_state.menu.next(*event)
-//     }
-// }
-
-// fn ui_settings_system(
-//     mut commands: Commands,
-//     mut egui_context: ResMut<EguiContext>,
-//     mut settings_state: ResMut<SettingsState>,
-//     mut event_writer: EventWriter<MyEvent>,
-// ) {
-//     egui::CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
-//         settings_state.menu.show(ui, &mut event_writer);
-//     });
-// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Actions {
@@ -94,13 +91,6 @@ impl ScreenTrait for Screens {
         }
     }
 }
-
-// fn a_screen(
-//     menu: &mut NavigationMenu<CustomState, Actions, Screens>
-// ) -> Option<MenuSelection<Actions, Screens, CustomState>> {
-//     // need a way to wrap the return here without exposing ui
-//     /// ???
-// }
 
 fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
     Menu {

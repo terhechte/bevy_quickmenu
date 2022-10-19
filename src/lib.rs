@@ -1,5 +1,5 @@
 mod navigation_menu;
-mod style;
+pub mod style;
 mod systems;
 mod types;
 mod widgets;
@@ -9,16 +9,17 @@ use bevy::{
     prelude::{EventWriter, Plugin, Res, Resource, SystemSet},
 };
 use bevy_egui::{
-    egui::{Context, Id, Ui},
+    egui::{Id, Ui},
     EguiPlugin,
 };
+use style::Stylesheet;
 
 use std::fmt::Debug;
 use std::hash::Hash;
 
 pub use bevy_egui::egui;
 pub use navigation_menu::NavigationMenu;
-pub use types::{CursorDirection, MenuItem, MenuSelection};
+pub use types::{CursorDirection, CustomFontData, MenuItem, MenuSelection};
 
 pub struct Menu<A, S, State>
 where
@@ -49,6 +50,7 @@ pub fn make_menu<State, A, S>(
     id: Id,
     cursor_direction: Option<CursorDirection>,
     items: &[MenuItem<State, A, S>],
+    stylesheet: &Stylesheet,
 ) -> Option<MenuSelection<A, S, State>>
 where
     State: 'static,
@@ -61,6 +63,7 @@ where
         cursor_direction,
         items,
         selection: &mut selection,
+        stylesheet,
     });
     selection
 }
@@ -81,9 +84,9 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn new(state: State, screen: S) -> Self {
+    pub fn new(state: State, screen: S, sheet: Option<Stylesheet>) -> Self {
         Self {
-            menu: NavigationMenu::new(state, screen),
+            menu: NavigationMenu::new(state, screen, sheet),
         }
     }
 }
@@ -123,6 +126,7 @@ where
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(EguiPlugin)
             .add_event::<CursorDirection>()
+            .add_startup_system(crate::systems::setup_menu_system::<State, A, S>)
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(resource_exists::<State, A, S>)
@@ -140,22 +144,4 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     resource.is_some().into()
-}
-
-pub fn register_font(data: &'static [u8], context: Context) {
-    use bevy_egui::egui::{FontData, FontDefinitions, FontFamily};
-
-    let mut fonts = FontDefinitions::default();
-
-    fonts
-        .font_data
-        .insert("custom_font".to_owned(), FontData::from_static(data));
-
-    fonts
-        .families
-        .entry(FontFamily::Proportional)
-        .or_default()
-        .insert(0, "custom_font".to_owned());
-
-    context.set_fonts(fonts);
 }

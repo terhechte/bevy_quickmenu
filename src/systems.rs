@@ -1,7 +1,11 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::CentralPanel, EguiContext};
 
-use crate::{types::CursorDirection, ActionTrait, ScreenTrait, SettingsState};
+use crate::{
+    style::register_stylesheet,
+    types::{CursorDirection, CustomFontData},
+    ActionTrait, ScreenTrait, SettingsState,
+};
 
 pub fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
@@ -19,6 +23,23 @@ pub fn keyboard_input_system(
     }
 
     // FIXME: Gamepad
+}
+
+pub fn setup_menu_system<State, A, S>(
+    mut egui_context: ResMut<EguiContext>,
+    settings_state: Res<SettingsState<State, A, S>>,
+    mut custom_font: Option<ResMut<CustomFontData>>,
+) where
+    State: Send + Sync + 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    let optional_custom_font = custom_font.as_deref_mut().and_then(|e| e.0.take());
+    register_stylesheet(
+        &settings_state.menu.stylesheet,
+        egui_context.ctx_mut(),
+        optional_custom_font,
+    );
 }
 
 pub fn ui_settings_system<State, A, S>(

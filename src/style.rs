@@ -1,4 +1,6 @@
-use bevy_egui::egui::{style::Margin, Color32};
+use std::collections::BTreeMap;
+
+use bevy_egui::egui::{self, style::Margin, Color32, Context};
 
 #[derive(Debug, Clone)]
 pub struct ControlState {
@@ -39,7 +41,7 @@ impl ControlState {
 
 #[derive(Debug, Clone)]
 pub struct Style {
-    pub size: usize,
+    pub size: f32,
     pub margin: Margin,
     pub padding: Margin,
     pub normal: ControlState,
@@ -50,7 +52,7 @@ pub struct Style {
 impl Default for Style {
     fn default() -> Self {
         Self {
-            size: Default::default(),
+            size: 20.0,
             margin: Default::default(),
             padding: Default::default(),
             normal: ControlState::normal(),
@@ -65,4 +67,57 @@ pub struct Stylesheet {
     pub back_button: Option<Style>,
     pub button: Option<Style>,
     pub label: Option<Style>,
+    pub headline: Option<Style>,
+}
+
+pub fn register_stylesheet(
+    stylesheet: &Stylesheet,
+    context: &Context,
+    font_data: Option<&'static [u8]>,
+) {
+    use egui::FontFamily;
+    use egui::FontId;
+    use egui::TextStyle::*;
+
+    let mut text_styles = BTreeMap::new();
+    if let Some(ref button) = stylesheet.button {
+        text_styles.insert(Button, FontId::new(button.size, FontFamily::Proportional));
+    }
+    if let Some(ref label) = stylesheet.label {
+        text_styles.insert(Body, FontId::new(label.size, FontFamily::Proportional));
+    }
+    if let Some(ref headline) = stylesheet.headline {
+        text_styles.insert(
+            Heading,
+            FontId::new(headline.size, FontFamily::Proportional),
+        );
+    }
+
+    if !text_styles.is_empty() {
+        let mut style = (*context.style()).clone();
+        style.text_styles = text_styles;
+        context.set_style(style);
+    }
+
+    if let Some(custom_data) = font_data {
+        register_font(custom_data, context);
+    }
+}
+
+fn register_font(data: &'static [u8], context: &Context) {
+    use bevy_egui::egui::{FontData, FontDefinitions, FontFamily};
+
+    let mut fonts = FontDefinitions::default();
+
+    fonts
+        .font_data
+        .insert("custom_font".to_owned(), FontData::from_static(data));
+
+    fonts
+        .families
+        .entry(FontFamily::Proportional)
+        .or_default()
+        .insert(0, "custom_font".to_owned());
+
+    context.set_fonts(fonts);
 }

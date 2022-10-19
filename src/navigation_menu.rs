@@ -22,7 +22,7 @@ where
     /// The custom state
     state: State,
     /// The style to use
-    style: Stylesheet,
+    pub(crate) stylesheet: Stylesheet,
 }
 
 impl<State, A, S> NavigationMenu<State, A, S>
@@ -30,21 +30,17 @@ where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
 {
-    pub fn new(state: State, root: S) -> Self {
+    pub fn new(state: State, root: S, sheet: Option<Stylesheet>) -> Self {
         Self {
             stack: vec![root],
             next_direction: None,
             state,
-            style: Stylesheet::default(),
+            stylesheet: sheet.unwrap_or_default(),
         }
     }
 
     pub fn next(&mut self, direction: CursorDirection) {
         self.next_direction = Some(direction);
-    }
-
-    pub fn set_style(&mut self, style: Stylesheet) {
-        self.style = style;
     }
 }
 
@@ -68,9 +64,13 @@ where
                 let is_last = (index + 1) == self.stack.len();
                 let cursor_direction = if is_last { next_direction } else { None };
                 let menu_desc = entry.resolve(&mut self.state);
-                if let Some(next) =
-                    make_menu(ui, menu_desc.id, cursor_direction, &menu_desc.entries)
-                {
+                if let Some(next) = make_menu(
+                    ui,
+                    menu_desc.id,
+                    cursor_direction,
+                    &menu_desc.entries,
+                    &self.stylesheet,
+                ) {
                     if is_last {
                         next_menu = Some(next);
                     }

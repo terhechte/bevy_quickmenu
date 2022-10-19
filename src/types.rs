@@ -1,4 +1,5 @@
 use crate::{ActionTrait, ScreenTrait};
+use bevy::prelude::Resource;
 use bevy_egui::egui::WidgetText;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -82,3 +83,6 @@ where
         }
     }
 }
+
+#[derive(Resource)]
+pub struct CustomFontData(pub Option<&'static [u8]>);

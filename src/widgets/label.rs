@@ -1,40 +1,29 @@
 use crate::style::Style;
 use bevy_egui::egui::*;
 
-pub struct BorderedButton {
+pub struct BorderedLabel {
     text: WidgetText,
-    sense: Sense,
     min_size: Vec2,
     style: Option<Style>,
-    focus: bool,
 }
 
-impl BorderedButton {
+impl BorderedLabel {
     pub fn new(text: WidgetText, style: Option<Style>) -> Self {
         Self {
             text,
-            sense: Sense::click(),
             min_size: Vec2::ZERO,
             style,
-            focus: false,
         }
-    }
-
-    pub fn set_focus(mut self, value: bool) -> Self {
-        self.focus = value;
-        self
     }
 }
 
-impl Widget for BorderedButton {
+impl Widget for BorderedLabel {
     fn ui(self, ui: &mut Ui) -> Response {
-        let BorderedButton {
+        let BorderedLabel {
             text,
-            sense,
             min_size,
             style,
-            focus,
-        }: BorderedButton = self;
+        }: BorderedLabel = self;
 
         let style = style.unwrap_or_default();
 
@@ -46,8 +35,8 @@ impl Widget for BorderedButton {
         let mut desired_size = text.size() + total_extra;
         desired_size = desired_size.at_least(min_size);
 
-        let (rect, response) = ui.allocate_at_least(desired_size, sense);
-        response.widget_info(|| WidgetInfo::labeled(WidgetType::Button, text.text()));
+        let (rect, response) = ui.allocate_at_least(desired_size, Sense::hover());
+        response.widget_info(|| WidgetInfo::labeled(WidgetType::Label, text.text()));
 
         // Focus the button automatically when it is hovered and the mouse is moving
         if response.hovered() && ui.ctx().input().pointer.velocity().length_sq() > 0.0 {
@@ -66,15 +55,7 @@ impl Widget for BorderedButton {
                 .align_size_within_rect(text.size(), text_rect)
                 .min;
 
-            let controlstate = if response.is_pointer_button_down_on() {
-                style.selected
-            } else if response.has_focus() {
-                style.hover
-            } else if focus {
-                style.selected
-            } else {
-                style.normal
-            };
+            let controlstate = style.normal;
 
             let mut border_rect = rect;
             border_rect.min += style.margin.left_top();
