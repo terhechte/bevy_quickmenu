@@ -58,23 +58,23 @@ where
 
             let mut select_navigation = false;
 
+            // get the selectable items
+            let selectables: Vec<_> = items.iter().filter(|e| e.is_selectable()).collect();
+
             if let (Some(cursor_direction), Some(mut index)) = (
                 cursor_direction,
-                items.iter().position(|e| e.as_selection() == selected),
+                selectables
+                    .iter()
+                    .position(|e| e.as_selection() == selected),
             ) {
-                loop {
-                    match cursor_direction {
-                        CursorDirection::Up if index > 0 => index -= 1,
-                        CursorDirection::Down if index < (items.len() - 1) => index += 1,
-                        CursorDirection::Select => select_navigation = true,
-                        _ => (),
-                    }
-                    if !matches!(items[index], MenuItem::Label(_, _)) {
-                        break;
-                    }
+                match cursor_direction {
+                    CursorDirection::Up if index > 0 => index -= 1,
+                    CursorDirection::Down if index < (selectables.len() - 1) => index += 1,
+                    CursorDirection::Select => select_navigation = true,
+                    _ => (),
                 }
                 // change selection
-                selected = items[index].as_selection();
+                selected = selectables[index].as_selection();
             }
 
             for item in items {

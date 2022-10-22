@@ -67,6 +67,10 @@ where
             MenuItem::Headline(_, _) => MenuSelection::None,
         }
     }
+
+    pub(crate) fn is_selectable(&self) -> bool {
+        !matches!(self, MenuItem::Label(_, _) | MenuItem::Headline(_, _))
+    }
 }
 
 impl<State, A, S> std::fmt::Debug for MenuItem<State, A, S>
