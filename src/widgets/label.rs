@@ -30,7 +30,7 @@ impl<'a> Widget for BorderedLabel<'a> {
         let wrap_width = ui.available_width() - total_extra.x;
         let text = text
             .clone()
-            .into_galley(ui, None, wrap_width, TextStyle::Button);
+            .into_galley(ui, None, wrap_width, style.text_style.clone());
 
         let mut desired_size = text.size() + total_extra;
         desired_size = desired_size.at_least(min_size);

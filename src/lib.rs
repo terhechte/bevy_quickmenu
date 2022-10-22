@@ -131,7 +131,7 @@ where
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugin(EguiPlugin)
             .add_event::<CursorDirection>()
-            .add_startup_system(crate::systems::setup_menu_system::<State, A, S>)
+            .add_startup_system(crate::systems::setup_menu_system)
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(resource_exists::<State, A, S>)
@@ -142,7 +142,7 @@ where
     }
 }
 
-fn resource_exists<State, A, S>(resource: Option<Res<SettingsState<State, A, S>>>) -> ShouldRun
+pub fn resource_exists<State, A, S>(resource: Option<Res<SettingsState<State, A, S>>>) -> ShouldRun
 where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,

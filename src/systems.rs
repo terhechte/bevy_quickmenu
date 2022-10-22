@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui::CentralPanel, EguiContext};
 
 use crate::{
-    style::register_stylesheet,
+    style::{register_stylesheet, Stylesheet},
     types::{CursorDirection, CustomFontData},
     ActionTrait, ScreenTrait, SettingsState,
 };
@@ -16,7 +16,6 @@ pub fn keyboard_input_system(
 ) {
     use CursorDirection::*;
     if keyboard_input.just_pressed(KeyCode::Down) {
-        info!("DOWN");
         writer.send(Down);
     } else if keyboard_input.just_pressed(KeyCode::Up) {
         writer.send(Up);
@@ -62,21 +61,21 @@ pub fn keyboard_input_system(
     }
 }
 
-pub fn setup_menu_system<State, A, S>(
+pub fn setup_menu_system(
+    mut commands: Commands,
     mut egui_context: ResMut<EguiContext>,
-    settings_state: Res<SettingsState<State, A, S>>,
     mut custom_font: Option<ResMut<CustomFontData>>,
-) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
+    stylesheet: Option<Res<Stylesheet>>,
+) {
+    let valid_stylesheet = stylesheet.map(|e| e.clone()).unwrap_or_default();
     let optional_custom_font = custom_font.as_deref_mut().and_then(|e| e.0.take());
     register_stylesheet(
-        &settings_state.menu.stylesheet,
+        &valid_stylesheet,
         egui_context.ctx_mut(),
         optional_custom_font,
     );
+    // insert again, might override the old one with itself
+    commands.insert_resource(valid_stylesheet);
 }
 
 pub fn ui_settings_system<State, A, S>(

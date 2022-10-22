@@ -81,7 +81,6 @@ where
                 let is_label = matches!(item, MenuItem::Label(_, _));
                 let item_selection = item.as_selection();
                 let focussed = (selected == item_selection) && !is_label;
-                println!("item {:?} sleected {}", &item, focussed);
                 let response = match item {
                     MenuItem::Screen(t, i, _) => add_item(
                         ui,
@@ -124,7 +123,7 @@ where
 }
 
 fn add_item(ui: &mut Ui, icon: &MenuIcon, style: &Style, widget: impl Widget) -> Response {
-    let icon_style: Style = (&style.icon_style).into();
+    let icon_style: Style = style.as_iconstyle();
     let is_postfix = icon.is_postfix();
     ui.horizontal(|ui| {
         if !is_postfix {

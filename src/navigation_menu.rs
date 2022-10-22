@@ -53,8 +53,11 @@ where
     pub fn show(&mut self, ui: &mut Ui, event_writer: &mut EventWriter<A::Event>) {
         let next_direction = self.next_direction.take();
 
-        if let Some(CursorDirection::Back) = next_direction {
-            self.stack.pop();
+        // Can't pop the root
+        if self.stack.len() > 1 {
+            if let Some(CursorDirection::Back) = next_direction {
+                self.stack.pop();
+            }
         }
 
         let mut next_menu: Option<MenuSelection<A, S, State>> = None;

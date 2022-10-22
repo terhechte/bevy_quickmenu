@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use bevy_egui::egui::{self, style::Margin, Color32, Context};
+use bevy::prelude::Resource;
+use bevy_egui::egui::{self, style::Margin, Color32, Context, TextStyle};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ControlState {
@@ -58,42 +59,39 @@ pub struct IconStyle {
     pub leading_margin: f32,
     /// The trailing margin is only used for postfix icons
     pub trailing_margin: f32,
-    pub size: f32,
-    pub margin: Margin,
-    pub padding: Margin,
+    /// An alternative foreground color
     pub foreground_color: Color32,
 }
 
-impl IconStyle {
-    pub fn with(size: f32, margin: Margin, padding: Margin) -> Self {
+impl Default for IconStyle {
+    fn default() -> Self {
         Self {
             leading_margin: 5.0,
             trailing_margin: 10.0,
-            size,
-            margin,
-            padding,
             foreground_color: Color32::WHITE,
         }
     }
 }
 
-impl From<&IconStyle> for Style {
-    fn from(i: &IconStyle) -> Self {
+impl Style {
+    /// Create a new style with the adaptions for the icons for this element
+    pub fn as_iconstyle(&self) -> Style {
         let control_state = ControlState {
-            fg: i.foreground_color,
+            fg: self.icon_style.foreground_color,
             bg: None,
             stroke: Color32::BLACK,
             stroke_width: 0.0,
             rounding: 0.0,
         };
         Style {
-            size: i.size,
-            margin: i.margin,
-            padding: i.padding,
+            size: self.size,
+            margin: self.margin,
+            padding: self.padding,
             normal: control_state,
             hover: control_state,
             selected: control_state,
-            icon_style: IconStyle::with(i.size, i.margin, i.padding),
+            icon_style: self.icon_style.clone(),
+            text_style: self.text_style.clone(),
         }
     }
 }
@@ -107,6 +105,7 @@ pub struct Style {
     pub hover: ControlState,
     pub selected: ControlState,
     pub icon_style: IconStyle,
+    pub text_style: TextStyle,
 }
 
 impl Style {
@@ -118,7 +117,8 @@ impl Style {
             normal: ControlState::normal(),
             hover: ControlState::hover(),
             selected: ControlState::selected(),
-            icon_style: IconStyle::with(20.0, Margin::same(5.0), Margin::same(5.0)),
+            icon_style: IconStyle::default(),
+            text_style: TextStyle::Button,
         }
     }
 
@@ -130,7 +130,8 @@ impl Style {
             normal: ControlState::clear(Color32::GRAY),
             hover: ControlState::clear(Color32::GRAY),
             selected: ControlState::clear(Color32::GRAY),
-            icon_style: IconStyle::with(20.0, Margin::same(5.0), Margin::same(5.0)),
+            icon_style: IconStyle::default(),
+            text_style: TextStyle::Body,
         }
     }
 
@@ -142,12 +143,13 @@ impl Style {
             normal: ControlState::clear(Color32::WHITE),
             hover: ControlState::clear(Color32::WHITE),
             selected: ControlState::clear(Color32::WHITE),
-            icon_style: IconStyle::with(20.0, Margin::same(5.0), Margin::same(5.0)),
+            icon_style: IconStyle::default(),
+            text_style: TextStyle::Heading,
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct Stylesheet {
     pub button: Style,
     pub label: Style,
@@ -183,11 +185,11 @@ pub fn register_stylesheet(
         FontId::new(stylesheet.button.size, FontFamily::Proportional),
     );
     text_styles.insert(
-        Button,
+        Body,
         FontId::new(stylesheet.label.size, FontFamily::Proportional),
     );
     text_styles.insert(
-        Button,
+        Heading,
         FontId::new(stylesheet.headline.size, FontFamily::Proportional),
     );
 

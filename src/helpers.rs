@@ -8,6 +8,8 @@ pub enum ControlDevice {
         gamepad_id: usize,
     },
     Keyboard {
+        title: &'static str,
+        description: &'static str,
         keyboard_id: usize,
         left: KeyCode,
         right: KeyCode,
@@ -35,9 +37,7 @@ impl Display for ControlDevice {
             ControlDevice::Gamepad { gamepad_id } => {
                 f.write_fmt(format_args!("Gamepad {gamepad_id}"))
             }
-            ControlDevice::Keyboard { keyboard_id, .. } => {
-                f.write_fmt(format_args!("Keyboard {keyboard_id}"))
-            }
+            ControlDevice::Keyboard { title, .. } => f.write_fmt(format_args!("{title}")),
         }
     }
 }
@@ -45,6 +45,8 @@ impl Display for ControlDevice {
 impl ControlDevice {
     pub fn keyboard1() -> ControlDevice {
         ControlDevice::Keyboard {
+            title: "Keyboard 1",
+            description: "Cursor Keys + N + M",
             keyboard_id: usize::MAX - 32,
             left: KeyCode::Left,
             right: KeyCode::Right,
@@ -59,19 +61,23 @@ impl ControlDevice {
 
     pub fn keyboard2() -> ControlDevice {
         ControlDevice::Keyboard {
+            title: "Keyboard 2",
+            description: "WASD + B + V",
             keyboard_id: usize::MAX - 31,
             left: KeyCode::A,
             right: KeyCode::D,
             top: KeyCode::W,
             bottom: KeyCode::S,
-            action1: KeyCode::C,
-            action2: KeyCode::X,
-            start: KeyCode::V,
-            cancel: KeyCode::B,
+            action1: KeyCode::B,
+            action2: KeyCode::V,
+            start: KeyCode::Return,
+            cancel: KeyCode::Escape,
         }
     }
     pub fn keyboard3() -> ControlDevice {
         ControlDevice::Keyboard {
+            title: "Keyboard 3",
+            description: "Out of Keys",
             keyboard_id: usize::MAX - 30,
             left: KeyCode::P,
             right: KeyCode::P,
@@ -85,6 +91,8 @@ impl ControlDevice {
     }
     pub fn keyboard4() -> ControlDevice {
         ControlDevice::Keyboard {
+            title: "Keyboard 4",
+            description: "Out of Keys",
             keyboard_id: usize::MAX - 29,
             left: KeyCode::P,
             right: KeyCode::P,
