@@ -20,7 +20,7 @@ where
     /// Any user input (cursor keys, gamepad) is set here
     next_direction: Option<CursorDirection>,
     /// The custom state
-    state: State,
+    pub(crate) state: State,
     /// The style to use
     pub(crate) stylesheet: Stylesheet,
 }
@@ -75,6 +75,9 @@ where
                         next_menu = Some(next);
                     }
                 }
+                if !is_last {
+                    ui.add_space(self.stylesheet.horizontal_spacing);
+                }
             }
         });
 
@@ -82,6 +85,7 @@ where
             match n {
                 MenuSelection::Action(a) => a.handle(&mut self.state, event_writer),
                 MenuSelection::Screen(s) => self.stack.push(s),
+                MenuSelection::None => (),
             }
         }
     }

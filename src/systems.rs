@@ -10,9 +10,13 @@ use crate::{
 pub fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut writer: EventWriter<CursorDirection>,
+    gamepads: Res<Gamepads>,
+    button_inputs: Res<Input<GamepadButton>>,
+    axes: Res<Axis<GamepadAxis>>,
 ) {
     use CursorDirection::*;
     if keyboard_input.just_pressed(KeyCode::Down) {
+        info!("DOWN");
         writer.send(Down);
     } else if keyboard_input.just_pressed(KeyCode::Up) {
         writer.send(Up);
@@ -22,7 +26,40 @@ pub fn keyboard_input_system(
         writer.send(Back);
     }
 
-    // FIXME: Gamepad
+    for gamepad in gamepads.iter() {
+        if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadDown)) {
+            writer.send(Down);
+        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadUp))
+        {
+            writer.send(Up);
+        } else if button_inputs
+            .just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadRight))
+        {
+            writer.send(Back);
+        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South))
+        {
+            writer.send(Select);
+        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East)) {
+            writer.send(Back);
+        }
+
+        if axes.is_changed() {
+            for (axis, check_negative, action) in [
+                (GamepadAxisType::LeftStickX, true, Back),
+                (GamepadAxisType::LeftStickY, true, Down),
+                (GamepadAxisType::LeftStickY, false, Up),
+                (GamepadAxisType::RightStickX, true, Back),
+                (GamepadAxisType::RightStickY, true, Down),
+                (GamepadAxisType::RightStickY, false, Up),
+            ] {
+                if let Some(value) = axes.get(GamepadAxis::new(gamepad, axis)) {
+                    if (check_negative && value < -0.1) || (!check_negative && value > 0.1) {
+                        writer.send(action);
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn setup_menu_system<State, A, S>(
@@ -68,3 +105,36 @@ pub fn input_system<State, A, S>(
         settings_state.menu.next(*event)
     }
 }
+
+// pub fn update_gamepads_system(
+//     gamepads: Res<Gamepads>,
+//     button_inputs: Res<Input<GamepadButton>>,
+//     button_axes: Res<Axis<GamepadButton>>,
+//     axes: Res<Axis<GamepadAxis>>,
+// ) {
+//     for gamepad in gamepads.iter().cloned() {
+//         if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South)) {
+//             info!("{:?} just pressed South", gamepad);
+//         } else if button_inputs.just_released(GamepadButton::new(gamepad, GamepadButtonType::South))
+//         {
+//             info!("{:?} just released South", gamepad);
+//         }
+
+//         let right_trigger = button_axes
+//             .get(GamepadButton::new(
+//                 gamepad,
+//                 GamepadButtonType::RightTrigger2,
+//             ))
+//             .unwrap();
+//         if right_trigger.abs() > 0.01 {
+//             info!("{:?} RightTrigger2 value is {}", gamepad, right_trigger);
+//         }
+
+//         let left_stick_x = axes
+//             .get(GamepadAxis::new(gamepad, GamepadAxisType::LeftStickX))
+//             .unwrap();
+//         if left_stick_x.abs() > 0.01 {
+//             info!("{:?} LeftStickX value is {}", gamepad, left_stick_x);
+//         }
+//     }
+// }

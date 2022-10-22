@@ -1,3 +1,4 @@
+pub mod helpers;
 mod navigation_menu;
 pub mod style;
 mod systems;
@@ -19,7 +20,7 @@ use std::hash::Hash;
 
 pub use bevy_egui::egui;
 pub use navigation_menu::NavigationMenu;
-pub use types::{CursorDirection, CustomFontData, MenuItem, MenuSelection};
+pub use types::{CursorDirection, CustomFontData, MenuIcon, MenuItem, MenuSelection};
 
 pub struct Menu<A, S, State>
 where
@@ -88,6 +89,10 @@ where
         Self {
             menu: NavigationMenu::new(state, screen, sheet),
         }
+    }
+
+    pub fn state(&mut self) -> &mut State {
+        &mut self.menu.state
     }
 }
 

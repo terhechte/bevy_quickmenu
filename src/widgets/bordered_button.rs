@@ -1,16 +1,16 @@
 use crate::style::Style;
 use bevy_egui::egui::*;
 
-pub struct BorderedButton {
-    text: WidgetText,
+pub struct BorderedButton<'a> {
+    text: &'a WidgetText,
     sense: Sense,
     min_size: Vec2,
-    style: Option<Style>,
+    style: &'a Style,
     focus: bool,
 }
 
-impl BorderedButton {
-    pub fn new(text: WidgetText, style: Option<Style>) -> Self {
+impl<'a> BorderedButton<'a> {
+    pub fn new(text: &'a WidgetText, style: &'a Style) -> Self {
         Self {
             text,
             sense: Sense::click(),
@@ -26,7 +26,7 @@ impl BorderedButton {
     }
 }
 
-impl Widget for BorderedButton {
+impl<'a> Widget for BorderedButton<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
         let BorderedButton {
             text,
@@ -36,12 +36,12 @@ impl Widget for BorderedButton {
             focus,
         }: BorderedButton = self;
 
-        let style = style.unwrap_or_default();
-
         let total_extra = style.padding.sum() + style.margin.sum();
 
         let wrap_width = ui.available_width() - total_extra.x;
-        let text = text.into_galley(ui, None, wrap_width, TextStyle::Button);
+        let text = text
+            .clone()
+            .into_galley(ui, None, wrap_width, TextStyle::Button);
 
         let mut desired_size = text.size() + total_extra;
         desired_size = desired_size.at_least(min_size);
@@ -82,12 +82,20 @@ impl Widget for BorderedButton {
             border_rect.max.x = border_rect.max.x.max(border_rect.min.x);
             border_rect.max.y = border_rect.max.y.max(border_rect.min.y);
 
-            ui.painter().rect(
-                border_rect,
-                0.0,
-                controlstate.bg,
-                Stroke::new(controlstate.stroke_width, controlstate.stroke),
-            );
+            if let Some(bg) = controlstate.bg {
+                ui.painter().rect(
+                    border_rect,
+                    controlstate.rounding,
+                    bg,
+                    Stroke::new(controlstate.stroke_width, controlstate.stroke),
+                );
+            } else {
+                ui.painter().rect_stroke(
+                    rect,
+                    controlstate.rounding,
+                    Stroke::new(controlstate.stroke_width, controlstate.stroke),
+                )
+            }
 
             text.paint_with_fallback_color(ui.painter(), label_pos, controlstate.fg);
         }
