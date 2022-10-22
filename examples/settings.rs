@@ -30,8 +30,12 @@ pub struct SettingsPlugin;
 
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
+        // Create a default stylesheet. You can customize these as you wish
         let sheet = Stylesheet::default();
+        // If you want to load a custom font, insert the `CustomFontData` resource
         app.insert_resource(CustomFontData(Some(FONT_DATA)))
+            // The settings state that will be handed to menus, screens and actions.
+            // If you remove this resource, the menu will disappear
             .insert_resource(SettingsState::new(
                 CustomState {
                     sound_on: true,
@@ -47,8 +51,11 @@ impl Plugin for SettingsPlugin {
                 Screens::Root,
                 Some(sheet),
             ))
+            // Register a event that can be called from your action handler
             .add_event::<MyEvent>()
+            // The plugin
             .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
+            // Some systems
             .add_system(event_reader)
             .add_system(update_gamepads_system);
     }
