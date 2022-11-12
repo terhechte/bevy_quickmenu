@@ -118,7 +118,9 @@ fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
             MenuItem::headline("Settings"),
             MenuItem::action("Back", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::screen("Sound", Screens::Sound).with_icon(MenuIcon::Sound),
+            MenuItem::headline("Settings"),
             MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls),
+            MenuItem::headline("Settings"),
         ],
     }
 }

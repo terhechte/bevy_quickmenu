@@ -52,8 +52,8 @@ impl ControlDevice {
             right: KeyCode::Right,
             top: KeyCode::Up,
             bottom: KeyCode::Down,
-            action1: KeyCode::Space,
-            action2: KeyCode::G,
+            action1: KeyCode::N,
+            action2: KeyCode::M,
             start: KeyCode::Return,
             cancel: KeyCode::Escape,
         }
