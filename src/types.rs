@@ -1,14 +1,26 @@
 use crate::{ActionTrait, ScreenTrait};
-use bevy::prelude::Resource;
-use bevy_egui::egui::WidgetText;
+use bevy::{
+    prelude::{Component, Resource, TextBundle},
+    text::TextStyle,
+    utils::HashMap,
+};
+// use bevy_egui::egui::{Label, WidgetText};
+
+#[derive(Component)]
+pub struct QuickMenuComponent;
+
+#[derive(Resource, Default)]
+pub struct Selections(pub HashMap<&'static str, usize>);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CursorDirection {
+pub enum NavigationEvent {
     Up,
     Down,
     Select,
     Back,
 }
+
+pub struct RedrawEvent;
 
 pub enum MenuItem<State, A, S>
 where
@@ -178,3 +190,61 @@ impl MenuIcon {
 
 #[derive(Resource)]
 pub struct CustomFontData(pub Option<&'static [u8]>);
+
+#[derive(Clone)]
+pub enum WidgetText {
+    PlainText(String), // FIXME: Add support for rich text
+}
+
+impl WidgetText {
+    pub fn bundle(&self, default_style: &TextStyle) -> TextBundle {
+        match self {
+            Self::PlainText(text) => TextBundle::from_section(text, default_style.clone()),
+        }
+    }
+
+    pub fn text(&self) -> &str {
+        match self {
+            Self::PlainText(text) => text,
+        }
+    }
+}
+
+impl Default for WidgetText {
+    fn default() -> Self {
+        Self::PlainText(String::new())
+    }
+}
+
+impl From<&str> for WidgetText {
+    #[inline]
+    fn from(text: &str) -> Self {
+        Self::PlainText(text.to_string())
+    }
+}
+
+impl From<&String> for WidgetText {
+    #[inline]
+    fn from(text: &String) -> Self {
+        Self::PlainText(text.clone())
+    }
+}
+
+impl From<String> for WidgetText {
+    #[inline]
+    fn from(text: String) -> Self {
+        Self::PlainText(text)
+    }
+}
+
+#[derive(Component)]
+pub struct ButtonComponent<State, A, S>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    pub style: crate::style::StyleEntry,
+    pub selection: MenuSelection<A, S, State>,
+    pub menu_identifier: (&'static str, usize),
+}

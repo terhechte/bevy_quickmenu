@@ -12,8 +12,6 @@ fn main() {
         .run();
 }
 
-const FONT_DATA: &[u8] = include_bytes!("font.ttf");
-
 #[derive(Debug)]
 enum MyEvent {
     CloseSettings,
@@ -30,42 +28,51 @@ pub struct SettingsPlugin;
 
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        // Create a default stylesheet. You can customize these as you wish
-        let sheet = Stylesheet::default();
-        // If you want to load a custom font, insert the `CustomFontData` resource
-        app.insert_resource(CustomFontData(Some(FONT_DATA)))
-            // The settings state that will be handed to menus, screens and actions.
-            // If you remove this resource, the menu will disappear
-            .insert_resource(SettingsState::new(
-                CustomState {
-                    sound_on: true,
-                    gamepads: Vec::new(),
-                    controls: [
-                        (0, ControlDevice::keyboard1()),
-                        (1, ControlDevice::keyboard2()),
-                        (2, ControlDevice::keyboard3()),
-                        (3, ControlDevice::keyboard4()),
-                    ]
-                    .into(),
-                },
-                Screens::Root,
-                Some(sheet),
-            ))
+        app
             // Register a event that can be called from your action handler
             .add_event::<MyEvent>()
             // The plugin
             .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
             // Some systems
+            .add_startup_system(setup)
             .add_system(event_reader)
             .add_system(update_gamepads_system);
     }
+}
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(Camera3dBundle::default());
+    let font = asset_server.load("font.ttf");
+    // Create a default stylesheet. You can customize these as you wish
+    let sheet = Stylesheet::with_font(font);
+
+    // The settings state that will be handed to menus, screens and actions.
+    // If you remove this resource, the menu will disappear
+    commands.insert_resource(SettingsState::new(
+        CustomState {
+            sound_on: true,
+            gamepads: Vec::new(),
+            controls: [
+                (0, ControlDevice::keyboard1()),
+                (1, ControlDevice::keyboard2()),
+                (2, ControlDevice::keyboard3()),
+                (3, ControlDevice::keyboard4()),
+            ]
+            .into(),
+        },
+        Screens::Root,
+        Some(sheet),
+    ))
 }
 
 fn update_gamepads_system(
     gamepads: Res<Gamepads>,
     mut settings_state: ResMut<SettingsState<CustomState, Actions, Screens>>,
 ) {
-    settings_state.state().gamepads = gamepads.iter().collect();
+    let gamepads = gamepads.iter().collect();
+    if settings_state.state().gamepads != gamepads {
+        settings_state.state_mut().gamepads = gamepads;
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -80,6 +87,7 @@ impl ActionTrait for Actions {
     type State = CustomState;
     type Event = MyEvent;
     fn handle(&self, state: &mut CustomState, event_writer: &mut EventWriter<MyEvent>) {
+        println!("Handle event");
         match self {
             Actions::Close => event_writer.send(MyEvent::CloseSettings),
             Actions::SoundOn => state.sound_on = true,
@@ -96,38 +104,41 @@ enum Screens {
     Root,
     Controls,
     Sound,
+    Soundx,
     Player(usize),
 }
 
 impl ScreenTrait for Screens {
     type Action = Actions;
-    fn resolve(&self, state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn resolve(&self, state: &CustomState) -> Menu<Actions, Screens, CustomState> {
         match self {
             Screens::Root => root_menu(state),
             Screens::Controls => controls_menu(state),
             Screens::Sound => sound_menu(state),
+            Screens::Soundx => sound_menu(state),
             Screens::Player(p) => player_controls_menu(state, *p),
         }
     }
 }
 
-fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+fn root_menu(_state: &CustomState) -> Menu<Actions, Screens, CustomState> {
     Menu {
-        id: Id::new("root"),
+        id: "root",
         entries: vec![
             MenuItem::headline("Settings"),
             MenuItem::action("Back", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::screen("Sound", Screens::Sound).with_icon(MenuIcon::Sound),
             MenuItem::headline("Settings"),
+            MenuItem::screen("Soundx", Screens::Soundx).with_icon(MenuIcon::Sound),
             MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls),
             MenuItem::headline("Settings"),
         ],
     }
 }
 
-fn sound_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+fn sound_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
     Menu {
-        id: Id::new("sound"),
+        id: "sound",
         entries: vec![
             MenuItem::label("Toggles sound and music"),
             MenuItem::action("On", Actions::SoundOn).checked(state.sound_on),
@@ -136,11 +147,11 @@ fn sound_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
     }
 }
 
-fn controls_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+fn controls_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
     let mut players: Vec<usize> = state.controls.keys().copied().collect();
     players.sort();
     Menu {
-        id: Id::new("controls"),
+        id: "controls",
         entries: players
             .into_iter()
             .map(|player| MenuItem::screen(format!("Player {player}"), Screens::Player(player)))
@@ -148,10 +159,7 @@ fn controls_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState>
     }
 }
 
-fn player_controls_menu(
-    state: &mut CustomState,
-    player: usize,
-) -> Menu<Actions, Screens, CustomState> {
+fn player_controls_menu(state: &CustomState, player: usize) -> Menu<Actions, Screens, CustomState> {
     let selected_control = state.controls[&player];
     let mut entries = vec![
         ControlDevice::keyboard1(),
@@ -174,7 +182,7 @@ fn player_controls_menu(
         })
         .collect();
     Menu {
-        id: Id::new(&format!("player-{player}")),
+        id: "players",
         entries,
     }
 }
