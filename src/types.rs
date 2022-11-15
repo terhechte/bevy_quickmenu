@@ -1,7 +1,8 @@
 use crate::{ActionTrait, ScreenTrait};
 use bevy::{
-    prelude::{Component, Resource, TextBundle},
+    prelude::{AssetServer, Component, Handle, Image, Resource, TextBundle},
     text::TextStyle,
+    ui::UiImage,
     utils::HashMap,
 };
 
@@ -157,32 +158,25 @@ pub enum MenuIcon {
     Checked,
     Unchecked,
     Back,
-    Reload,
     Controls,
     Sound,
+    Players,
+    Settings,
     Other(String, bool),
 }
 
 impl MenuIcon {
-    pub(crate) fn icon(&self) -> Option<&str> {
+    pub(crate) fn resolve_icon(&self, asset_server: &AssetServer) -> Option<Handle<Image>> {
         match self {
             MenuIcon::None => None,
-            MenuIcon::Checked => Some("\u{2611}"),
-            MenuIcon::Unchecked => Some("\u{2610}"),
-            MenuIcon::Back => Some("\u{2B05}"),
-            MenuIcon::Reload => Some("\u{27F3}"),
-            MenuIcon::Controls => Some("\u{1F3AE}"),
-            MenuIcon::Sound => Some("\u{1F509}"),
-            MenuIcon::Other(s, _) => Some(s),
-        }
-    }
-
-    /// Should the icon be displayed at trailing of the label
-    pub(crate) fn is_postfix(&self) -> bool {
-        match self {
-            MenuIcon::Reload => true,
-            MenuIcon::Other(_, pos) => *pos,
-            _ => false,
+            MenuIcon::Checked => Some(asset_server.load("icons/Checked.png")),
+            MenuIcon::Unchecked => Some(asset_server.load("icons/Unchecked.png")),
+            MenuIcon::Back => Some(asset_server.load("icons/Back.png")),
+            MenuIcon::Controls => Some(asset_server.load("icons/Controls.png")),
+            MenuIcon::Sound => Some(asset_server.load("icons/Sound.png")),
+            MenuIcon::Players => Some(asset_server.load("icons/Players.png")),
+            MenuIcon::Settings => Some(asset_server.load("icons/Settings.png")),
+            MenuIcon::Other(s, _) => Some(asset_server.load(s)),
         }
     }
 }

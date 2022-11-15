@@ -1,13 +1,12 @@
 use crate::{
     style::{StyleEntry, Stylesheet},
-    types::{ButtonComponent, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections},
+    types::{MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections},
     ActionTrait, ScreenTrait,
 };
 use bevy::prelude::*;
 
-//use super::{BorderedButton, BorderedLabel};
-use super::BorderedLabel;
 use super::Widget;
+use super::{ButtonWidget, LabelWidget};
 
 pub struct VerticalMenu<'a, State, A, S>
 where
@@ -28,7 +27,12 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn build(self, selections: &Selections, builder: &mut ChildBuilder, active: bool) {
+    pub fn build(
+        self,
+        asset_server: &AssetServer,
+        selections: &Selections,
+        builder: &mut ChildBuilder,
+    ) {
         let VerticalMenu {
             id,
             items,
@@ -62,46 +66,44 @@ where
 
                     match item {
                         MenuItem::Screen(t, i, _) => self.add_item(
+                            asset_server,
                             parent,
                             i,
                             &stylesheet.button,
-                            &item_selection,
-                            (id, index),
-                            focussed,
-                            active,
-                            //BorderedButton::new(t, &stylesheet.button).set_focus(focussed),
-                            BorderedLabel::new(t, &stylesheet.label, &item_selection),
+                            ButtonWidget::new(
+                                t,
+                                &stylesheet.button,
+                                (id, index),
+                                &item_selection,
+                                focussed,
+                            ),
                         ),
                         MenuItem::Action(t, i, _) => self.add_item(
+                            asset_server,
                             parent,
                             i,
                             &stylesheet.button,
-                            &item_selection,
-                            (id, index),
-                            focussed,
-                            active,
-                            //BorderedButton::new(t, &stylesheet.button).set_focus(focussed),
-                            BorderedLabel::new(t, &stylesheet.label, &item_selection),
+                            ButtonWidget::new(
+                                t,
+                                &stylesheet.button,
+                                (id, index),
+                                &item_selection,
+                                focussed,
+                            ),
                         ),
                         MenuItem::Label(t, i) => self.add_item(
+                            asset_server,
                             parent,
                             i,
                             &stylesheet.label,
-                            &item_selection,
-                            (id, index),
-                            focussed,
-                            active,
-                            BorderedLabel::new(t, &stylesheet.label, &item_selection),
+                            LabelWidget::new(t, &stylesheet.label),
                         ),
                         MenuItem::Headline(t, i) => self.add_item(
+                            asset_server,
                             parent,
                             i,
                             &stylesheet.headline,
-                            &item_selection,
-                            (id, index),
-                            focussed,
-                            active,
-                            BorderedLabel::new(t, &stylesheet.headline, &item_selection),
+                            LabelWidget::new(t, &stylesheet.headline),
                         ),
                     };
 
@@ -157,7 +159,6 @@ where
     ) -> (usize, Vec<(usize, &'a MenuItem<State, A, S>)>) {
         let selectables: Vec<_> = items
             .iter()
-            //.filter(|(_, e)| e.is_selectable())
             .filter(|e| e.is_selectable())
             .enumerate()
             .collect();
@@ -175,52 +176,35 @@ where
 
     fn add_item(
         &self,
+        asset_server: &AssetServer,
         parent: &mut ChildBuilder,
         icon: &MenuIcon,
         style: &StyleEntry,
-        selection: &MenuSelection<A, S, State>,
-        menu_identifier: (&'static str, usize),
-        focussed: bool,
-        active: bool,
         widget: impl Widget,
     ) {
-        let icon_style: StyleEntry = style.as_iconstyle();
-        let is_postfix = icon.is_postfix();
-
-        // FIXME: Place the thing
-
         parent
             .spawn(NodeBundle {
                 style: Style {
-                    align_items: AlignItems::FlexStart,
+                    align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Row,
-                    // padding: UiRect::all(Val::Px(stylesheet.vertical_spacing)),
                     ..default()
                 },
                 ..default()
             })
             .with_children(|parent| {
-                // FIXME: Add support for icon
-                widget.build(parent, menu_identifier, focussed, active);
-                // FIXME: Add suppot for icon
+                if let Some(image_handle) = icon.resolve_icon(asset_server) {
+                    parent.spawn(ImageBundle {
+                        style: Style {
+                            size: style.icon_style.size,
+                            margin: style.icon_style.padding,
+                            ..default()
+                        },
+                        image: image_handle.into(),
+                        background_color: BackgroundColor(style.icon_style.tint_color),
+                        ..Default::default()
+                    });
+                }
+                widget.build(parent);
             });
-
-        // ui.horizontal(|ui| {
-        //     if !is_postfix {
-        //         if let Some(t) = icon.icon() {
-        //             ui.add(BorderedLabel::new(&t.into(), &icon_style));
-        //             ui.add_space(style.icon_style.leading_margin);
-        //         }
-        //     }
-        //     let response = ui.add(widget);
-        //     if is_postfix {
-        //         if let Some(t) = icon.icon() {
-        //             ui.add_space(style.icon_style.trailing_margin);
-        //             ui.add(BorderedLabel::new(&t.into(), &icon_style));
-        //         }
-        //     }
-        //     response
-        // })
-        // .inner
     }
 }

@@ -43,7 +43,12 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn show(&self, selections: &Selections, commands: &mut Commands) {
+    pub fn show(
+        &self,
+        asset_server: &AssetServer,
+        selections: &Selections,
+        commands: &mut Commands,
+    ) {
         commands
             .spawn(NodeBundle {
                 style: Style {
@@ -56,15 +61,14 @@ where
                 ..default()
             })
             .with_children(|parent| {
-                for (index, entry) in self.stack.iter().enumerate() {
-                    let is_last = (index + 1) == self.stack.len();
+                for entry in self.stack.iter() {
                     let menu_desc = entry.resolve(&self.state);
                     super::widgets::VerticalMenu {
                         id: menu_desc.id,
                         items: &menu_desc.entries,
                         stylesheet: &self.stylesheet,
                     }
-                    .build(selections, parent, is_last);
+                    .build(asset_server, selections, parent);
                 }
             })
             .insert(QuickMenuComponent);

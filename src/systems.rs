@@ -81,6 +81,7 @@ pub fn redraw_system<State, A, S>(
     settings_state: Res<SettingsState<State, A, S>>,
     selections: Res<Selections>,
     mut redraw_reader: EventReader<RedrawEvent>,
+    asset_server: Res<AssetServer>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
@@ -90,7 +91,9 @@ pub fn redraw_system<State, A, S>(
         for item in existing.iter() {
             commands.entity(item).despawn_recursive();
         }
-        settings_state.menu.show(&selections, &mut commands);
+        settings_state
+            .menu
+            .show(&asset_server, &selections, &mut commands);
     }
 }
 
@@ -164,16 +167,12 @@ pub fn mouse_system<State, A, S>(
             }
             Interaction::Hovered => {
                 if !selected {
-                    if let Some(bg) = style.hover.bg {
-                        background_color.0 = bg;
-                    }
+                    background_color.0 = style.hover.bg;
                 }
             }
             Interaction::None => {
                 if !selected {
-                    if let Some(bg) = style.normal.bg {
-                        background_color.0 = bg;
-                    }
+                    background_color.0 = style.normal.bg;
                 }
             }
         }
