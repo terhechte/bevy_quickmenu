@@ -52,7 +52,6 @@ where
         commands
             .spawn(NodeBundle {
                 style: Style {
-                    // size: Size::new(Val::Percent(100.0), Val::Px(30.)),
                     align_items: AlignItems::FlexStart,
                     flex_direction: FlexDirection::Row,
                     padding: UiRect::all(Val::Px(self.stylesheet.vertical_spacing)),

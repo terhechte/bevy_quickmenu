@@ -58,7 +58,7 @@ where
         let (bg, fg) = if selected {
             (style.selected.bg, style.selected.fg)
         } else {
-            (style.normal.bg, style.selected.fg)
+            (style.normal.bg, style.normal.fg)
         };
 
         let text_style = TextStyle {

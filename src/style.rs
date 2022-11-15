@@ -16,20 +16,20 @@ impl ControlState {
     fn normal() -> Self {
         Self {
             fg: Color::WHITE,
-            bg: Color::BLUE,
+            bg: Color::NAVY,
         }
     }
 
     fn hover() -> Self {
         Self {
-            fg: Color::WHITE,
-            bg: Color::RED,
+            fg: Color::YELLOW,
+            bg: Color::NAVY,
         }
     }
 
     fn selected() -> Self {
         Self {
-            fg: Color::BLACK,
+            fg: Color::NAVY,
             bg: Color::WHITE,
         }
     }
@@ -49,8 +49,8 @@ impl Default for IconStyle {
     fn default() -> Self {
         Self {
             size: Size::new(Val::Px(32.0), Val::Px(32.0)),
-            padding: UiRect::all(Val::Px(14.0)),
-            tint_color: Color::YELLOW,
+            padding: UiRect::all(Val::Px(6.0)),
+            tint_color: Color::WHITE,
         }
     }
 }
@@ -82,14 +82,15 @@ impl StyleEntry {
     }
 
     fn label() -> Self {
+        let gray = Color::rgb(0.7, 0.7, 0.7);
         Self {
-            size: 20.0, // FIXME: Was 14
+            size: 18.0,
             font: Default::default(),
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
-            normal: ControlState::clear(Color::WHITE),
-            hover: ControlState::clear(Color::WHITE),
-            selected: ControlState::clear(Color::WHITE),
+            normal: ControlState::clear(gray),
+            hover: ControlState::clear(gray),
+            selected: ControlState::clear(gray),
             icon_style: IconStyle::default(),
         }
     }
@@ -114,7 +115,6 @@ pub struct Stylesheet {
     pub label: StyleEntry,
     pub headline: StyleEntry,
     pub vertical_spacing: f32,
-    pub horizontal_spacing: f32,
 }
 
 impl Stylesheet {
@@ -134,7 +134,6 @@ impl Default for Stylesheet {
             label: StyleEntry::label(),
             headline: StyleEntry::headline(),
             vertical_spacing: 10.0,
-            horizontal_spacing: 20.0,
         }
     }
 }
