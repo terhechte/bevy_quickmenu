@@ -246,4 +246,5 @@ where
     pub style: crate::style::StyleEntry,
     pub selection: MenuSelection<A, S, State>,
     pub menu_identifier: (&'static str, usize),
+    pub selected: bool,
 }

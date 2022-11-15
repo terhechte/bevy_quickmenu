@@ -115,11 +115,15 @@ pub fn input_system<State, A, S>(
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn mouse_system<State, A, S>(
-    mut reader: EventReader<NavigationEvent>,
     mut settings_state: ResMut<SettingsState<State, A, S>>,
     mut interaction_query: Query<
-        (&Interaction, &types::ButtonComponent<State, A, S>),
+        (
+            &Interaction,
+            &types::ButtonComponent<State, A, S>,
+            &mut BackgroundColor,
+        ),
         Changed<Interaction>,
     >,
     mut event_writer: EventWriter<A::Event>,
@@ -133,16 +137,18 @@ pub fn mouse_system<State, A, S>(
     for (
         interaction,
         ButtonComponent {
-            style,
             selection,
+            style,
             menu_identifier,
+            selected,
         },
+        mut background_color,
     ) in &mut interaction_query
     {
         match *interaction {
             Interaction::Clicked => {
                 // pop to the chosen selection stack entry
-                settings_state.menu.pop_to_selection(&selection);
+                settings_state.menu.pop_to_selection(selection);
 
                 // pre-select the correct row
                 selections.0.insert(menu_identifier.0, menu_identifier.1);
@@ -150,14 +156,26 @@ pub fn mouse_system<State, A, S>(
                     .menu
                     .apply_event(&NavigationEvent::Select, &mut selections)
                 {
-                    // settings_state.menu.pop_stack(idx);
                     settings_state
                         .menu
-                        .handle_selection(&selection, &mut event_writer);
+                        .handle_selection(&current, &mut event_writer);
                     redraw_writer.send(RedrawEvent);
                 }
             }
-            _ => (),
+            Interaction::Hovered => {
+                if !selected {
+                    if let Some(bg) = style.hover.bg {
+                        background_color.0 = bg;
+                    }
+                }
+            }
+            Interaction::None => {
+                if !selected {
+                    if let Some(bg) = style.normal.bg {
+                        background_color.0 = bg;
+                    }
+                }
+            }
         }
     }
 }

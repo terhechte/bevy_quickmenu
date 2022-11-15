@@ -87,7 +87,6 @@ impl ActionTrait for Actions {
     type State = CustomState;
     type Event = MyEvent;
     fn handle(&self, state: &mut CustomState, event_writer: &mut EventWriter<MyEvent>) {
-        println!("Handle event");
         match self {
             Actions::Close => event_writer.send(MyEvent::CloseSettings),
             Actions::SoundOn => state.sound_on = true,

@@ -82,7 +82,6 @@ where
             let is_last = (index + 1) == self.stack.len();
             let menu_desc = entry.resolve(&self.state);
             if is_last {
-                println!("Current stack {}", menu_desc.id);
                 return super::widgets::VerticalMenu::apply_event(
                     event,
                     menu_desc.id,
@@ -110,7 +109,7 @@ where
     pub fn pop_to_selection(&mut self, selection: &MenuSelection<A, S, State>) {
         let mut found = false;
         let mut items = 0;
-        for (index, entry) in self.stack.iter().enumerate() {
+        for entry in self.stack.iter() {
             let menu_desc = entry.resolve(&self.state);
 
             if found {
@@ -124,7 +123,6 @@ where
             }
         }
         if self.stack.len() > 1 {
-            println!("items {items}");
             for _ in 0..items {
                 self.stack.pop();
             }

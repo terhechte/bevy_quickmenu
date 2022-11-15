@@ -4,7 +4,6 @@ use crate::{
     ActionTrait, ScreenTrait,
 };
 use bevy::prelude::*;
-// use bevy_egui::egui::{Id, Response, Sense, Ui, Vec2, Widget};
 
 //use super::{BorderedButton, BorderedLabel};
 use super::BorderedLabel;
@@ -143,10 +142,6 @@ where
             let is_label = matches!(item, MenuItem::Label(_, _));
             let item_selection = item.as_selection();
             let focussed = (selected == item_selection) && !is_label;
-            println!(
-                "{:?} {is_label} {select_navigation} {focussed}",
-                item.as_selection()
-            );
             if !is_label && (select_navigation && focussed) {
                 return Some(item_selection);
             }

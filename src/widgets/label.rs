@@ -92,6 +92,7 @@ where
                 style: style.clone(),
                 selection: selection.clone(),
                 menu_identifier,
+                selected,
             })
             .with_children(|parent| {
                 parent.spawn(text.bundle(&self.style.text_style));

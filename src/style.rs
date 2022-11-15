@@ -34,7 +34,7 @@ impl ControlState {
     fn hover() -> Self {
         Self {
             fg: Color::WHITE,
-            bg: Some(Color::BLUE),
+            bg: Some(Color::RED),
             stroke: Color::YELLOW,
             stroke_width: 4.0,
             rounding: 4.0,
