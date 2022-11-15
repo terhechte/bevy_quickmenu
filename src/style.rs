@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
-// use bevy_egui::egui::{self, style::Margin, Color, Context, TextStyle};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ControlState {
@@ -183,54 +182,3 @@ impl Default for Stylesheet {
         }
     }
 }
-
-// pub fn register_fonts(
-//     stylesheet: &mut Stylesheet,
-
-// ) {
-//     use egui::FontFamily;
-//     use egui::FontId;
-//     use egui::TextStyle::*;
-
-//     let mut text_styles = BTreeMap::new();
-//     text_styles.insert(
-//         Button,
-//         FontId::new(stylesheet.button.size, FontFamily::Proportional),
-//     );
-//     text_styles.insert(
-//         Body,
-//         FontId::new(stylesheet.label.size, FontFamily::Proportional),
-//     );
-//     text_styles.insert(
-//         Heading,
-//         FontId::new(stylesheet.headline.size, FontFamily::Proportional),
-//     );
-
-//     if !text_styles.is_empty() {
-//         let mut style = (*context.style()).clone();
-//         style.text_styles = text_styles;
-//         context.set_style(style);
-//     }
-
-//     if let Some(custom_data) = font_data {
-//         register_font(custom_data, context);
-//     }
-// }
-
-// fn register_font(data: &'static [u8], context: &Context) {
-//     use bevy_egui::egui::{FontData, FontDefinitions, FontFamily};
-
-//     let mut fonts = FontDefinitions::default();
-
-//     fonts
-//         .font_data
-//         .insert("custom_font".to_owned(), FontData::from_static(data));
-
-//     fonts
-//         .families
-//         .entry(FontFamily::Proportional)
-//         .or_default()
-//         .insert(0, "custom_font".to_owned());
-
-//     context.set_fonts(fonts);
-// }

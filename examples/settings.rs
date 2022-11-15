@@ -1,8 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
-    egui::*, helpers::ControlDevice, style::Stylesheet, ActionTrait, CustomFontData, Menu,
-    MenuIcon, MenuItem, QuickMenuPlugin, ScreenTrait, SettingsState,
+    helpers::ControlDevice, style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem,
+    QuickMenuPlugin, ScreenTrait, SettingsState,
 };
 
 fn main() {

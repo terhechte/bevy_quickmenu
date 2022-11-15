@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-// use bevy_egui::{egui::CentralPanel, EguiContext};
 
 use crate::{
     style::Stylesheet,
@@ -63,7 +62,6 @@ pub fn keyboard_input_system(
 
 pub fn setup_menu_system(
     mut commands: Commands,
-    // mut egui_context: ResMut<EguiContext>,
     mut custom_font: Option<ResMut<CustomFontData>>,
     stylesheet: Option<Res<Stylesheet>>,
     mut redraw_writer: EventWriter<RedrawEvent>,
@@ -71,53 +69,28 @@ pub fn setup_menu_system(
     commands.insert_resource(Selections::default());
     let valid_stylesheet = stylesheet.map(|e| e.clone()).unwrap_or_default();
     let optional_custom_font = custom_font.as_deref_mut().and_then(|e| e.0.take());
-    // FIXME: Fonts
-    // register_stylesheet(
-    //     &valid_stylesheet,
-    //     egui_context.ctx_mut(),
-    //     optional_custom_font,
-    // );
+
     // insert again, might override the old one with itself
     commands.insert_resource(valid_stylesheet);
     redraw_writer.send(RedrawEvent);
 }
 
-pub fn ui_settings_system<State, A, S>(
-    settings_state: Res<SettingsState<State, A, S>>,
-    mut redraw_writer: EventWriter<RedrawEvent>,
-) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
-    // if settings_state.is_changed() {
-    //     println!("Settings changed");
-    //     redraw_writer.send(RedrawEvent);
-    // }
-}
-
 pub fn redraw_system<State, A, S>(
     mut commands: Commands,
     existing: Query<Entity, With<QuickMenuComponent>>,
-    mut settings_state: ResMut<SettingsState<State, A, S>>,
-    // mut event_writer: EventWriter<A::Event>,
+    settings_state: Res<SettingsState<State, A, S>>,
     selections: Res<Selections>,
     mut redraw_reader: EventReader<RedrawEvent>,
-    //  mut event_writer: EventWriter<RedrawEvent>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
     for _ in redraw_reader.iter() {
-        println!("redraw");
         for item in existing.iter() {
             commands.entity(item).despawn_recursive();
         }
         settings_state.menu.show(&selections, &mut commands);
-        // if !redraw {
-        //     redraw_writer.send(RedrawEvent)
-        // }
     }
 }
 
@@ -151,6 +124,7 @@ pub fn mouse_system<State, A, S>(
     >,
     mut event_writer: EventWriter<A::Event>,
     mut selections: ResMut<Selections>,
+    mut redraw_writer: EventWriter<RedrawEvent>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
@@ -167,11 +141,21 @@ pub fn mouse_system<State, A, S>(
     {
         match *interaction {
             Interaction::Clicked => {
-                settings_state
-                    .menu
-                    .handle_selection(&selection, &mut event_writer);
+                // pop to the chosen selection stack entry
+                settings_state.menu.pop_to_selection(&selection);
+
+                // pre-select the correct row
                 selections.0.insert(menu_identifier.0, menu_identifier.1);
-                println!("SELECTED");
+                if let Some(current) = settings_state
+                    .menu
+                    .apply_event(&NavigationEvent::Select, &mut selections)
+                {
+                    // settings_state.menu.pop_stack(idx);
+                    settings_state
+                        .menu
+                        .handle_selection(&selection, &mut event_writer);
+                    redraw_writer.send(RedrawEvent);
+                }
             }
             _ => (),
         }

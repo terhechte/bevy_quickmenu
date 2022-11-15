@@ -1,9 +1,8 @@
+use super::Widget;
 use crate::style::StyleEntry;
 use crate::types::{ButtonComponent, WidgetText};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
-// use bevy_egui::egui::*;
-use super::Widget;
 
 pub struct BorderedLabel<'a, A, S, State>
 where

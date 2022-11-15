@@ -7,14 +7,13 @@ mod widgets;
 
 use bevy::{
     ecs::schedule::ShouldRun,
-    prelude::{ChildBuilder, EventWriter, Plugin, Res, Resource, SystemSet},
+    prelude::{EventWriter, Plugin, Res, Resource, SystemSet},
 };
 use style::Stylesheet;
 
 use std::fmt::Debug;
 use std::hash::Hash;
 
-pub use bevy_egui::egui;
 pub use navigation_menu::NavigationMenu;
 pub use types::{
     CustomFontData, MenuIcon, MenuItem, MenuSelection, NavigationEvent, RedrawEvent, Selections,
@@ -43,31 +42,6 @@ pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
         state: &<<Self as ScreenTrait>::Action as ActionTrait>::State,
     ) -> Menu<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>;
 }
-
-// pub fn make_menu<State, A, S>(
-//     builder: &mut ChildBuilder,
-//     id: &'static str,
-//     cursor_direction: Option<CursorDirection>,
-//     items: &[MenuItem<State, A, S>],
-//     stylesheet: &Stylesheet,
-//     selections: &mut Selections,
-// ) -> Option<MenuSelection<A, S, State>>
-// where
-//     State: 'static,
-//     A: ActionTrait<State = State> + 'static,
-//     S: ScreenTrait<Action = A> + 'static,
-// {
-//     let mut selection: Option<MenuSelection<A, S, State>> = None;
-//     widgets::VerticalMenu {
-//         id,
-//         cursor_direction,
-//         items,
-//         selection: &mut selection,
-//         stylesheet,
-//     }
-//     .build(selections, builder);
-//     selection
-// }
 
 #[derive(Resource)]
 pub struct SettingsState<State, A, S>
@@ -142,7 +116,6 @@ where
                     .with_system(crate::systems::keyboard_input_system)
                     .with_system(crate::systems::input_system::<State, A, S>)
                     .with_system(crate::systems::mouse_system::<State, A, S>)
-                    .with_system(crate::systems::ui_settings_system::<State, A, S>)
                     .with_system(crate::systems::redraw_system::<State, A, S>),
             );
     }

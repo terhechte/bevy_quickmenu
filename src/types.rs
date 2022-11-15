@@ -4,7 +4,6 @@ use bevy::{
     text::TextStyle,
     utils::HashMap,
 };
-// use bevy_egui::egui::{Label, WidgetText};
 
 #[derive(Component)]
 pub struct QuickMenuComponent;
