@@ -1,6 +1,6 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::WidgetText;
+use crate::types::{MenuAssets, WidgetText};
 use bevy::prelude::*;
 
 pub struct LabelWidget<'a> {
@@ -15,13 +15,13 @@ impl<'a> LabelWidget<'a> {
 }
 
 impl<'a> Widget for LabelWidget<'a> {
-    fn build(self, parent: &mut ChildBuilder) {
+    fn build(self, parent: &mut ChildBuilder, assets: &MenuAssets) {
         let LabelWidget { text, style, .. } = self;
 
         let (bg, fg) = (style.normal.bg, style.selected.fg);
 
         let text_style = TextStyle {
-            font: style.font.clone(),
+            font: assets.font.clone(),
             font_size: style.size,
             color: fg,
         };

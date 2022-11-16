@@ -1,6 +1,6 @@
 use crate::{
     style::{StyleEntry, Stylesheet},
-    types::{MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections},
+    types::{MenuAssets, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections},
     ActionTrait, ScreenTrait,
 };
 use bevy::prelude::*;
@@ -19,6 +19,8 @@ where
     pub items: &'a [MenuItem<State, A, S>],
     // stylesheet
     pub stylesheet: &'a Stylesheet,
+    // Assets
+    pub assets: &'a MenuAssets,
 }
 
 impl<'a, State, A, S> VerticalMenu<'a, State, A, S>
@@ -27,16 +29,12 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn build(
-        self,
-        asset_server: &AssetServer,
-        selections: &Selections,
-        builder: &mut ChildBuilder,
-    ) {
+    pub fn build(self, selections: &Selections, builder: &mut ChildBuilder) {
         let VerticalMenu {
             id,
             items,
             stylesheet,
+            assets,
             ..
         } = self;
         if items.is_empty() {
@@ -66,7 +64,7 @@ where
 
                     match item {
                         MenuItem::Screen(t, i, _) => self.add_item(
-                            asset_server,
+                            assets,
                             parent,
                             i,
                             &stylesheet.button,
@@ -79,7 +77,7 @@ where
                             ),
                         ),
                         MenuItem::Action(t, i, _) => self.add_item(
-                            asset_server,
+                            assets,
                             parent,
                             i,
                             &stylesheet.button,
@@ -92,14 +90,14 @@ where
                             ),
                         ),
                         MenuItem::Label(t, i) => self.add_item(
-                            asset_server,
+                            assets,
                             parent,
                             i,
                             &stylesheet.label,
                             LabelWidget::new(t, &stylesheet.label),
                         ),
                         MenuItem::Headline(t, i) => self.add_item(
-                            asset_server,
+                            assets,
                             parent,
                             i,
                             &stylesheet.headline,
@@ -176,7 +174,7 @@ where
 
     fn add_item(
         &self,
-        asset_server: &AssetServer,
+        assets: &MenuAssets,
         parent: &mut ChildBuilder,
         icon: &MenuIcon,
         style: &StyleEntry,
@@ -192,7 +190,7 @@ where
                 ..default()
             })
             .with_children(|parent| {
-                if let Some(image_handle) = icon.resolve_icon(asset_server) {
+                if let Some(image_handle) = icon.resolve_icon(assets) {
                     parent.spawn(ImageBundle {
                         style: Style {
                             size: style.icon_style.size,
@@ -204,7 +202,7 @@ where
                         ..Default::default()
                     });
                 }
-                widget.build(parent);
+                widget.build(parent, self.assets);
             });
     }
 }

@@ -2,7 +2,11 @@ use bevy::prelude::EventWriter;
 use bevy::prelude::*;
 use std::fmt::Debug;
 
-use crate::{style::Stylesheet, types::QuickMenuComponent, Selections};
+use crate::{
+    style::Stylesheet,
+    types::{MenuAssets, QuickMenuComponent},
+    Selections,
+};
 
 use super::{
     types::{MenuSelection, NavigationEvent},
@@ -43,12 +47,7 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn show(
-        &self,
-        asset_server: &AssetServer,
-        selections: &Selections,
-        commands: &mut Commands,
-    ) {
+    pub fn show(&self, assets: &MenuAssets, selections: &Selections, commands: &mut Commands) {
         commands
             .spawn(NodeBundle {
                 style: Style {
@@ -66,8 +65,9 @@ where
                         id: menu_desc.id,
                         items: &menu_desc.entries,
                         stylesheet: &self.stylesheet,
+                        assets,
                     }
-                    .build(asset_server, selections, parent);
+                    .build(selections, parent);
                 }
             })
             .insert(QuickMenuComponent);

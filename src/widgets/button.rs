@@ -1,6 +1,6 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::{ButtonComponent, WidgetText};
+use crate::types::{ButtonComponent, MenuAssets, WidgetText};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
 
@@ -46,7 +46,7 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    fn build(self, parent: &mut ChildBuilder) {
+    fn build(self, parent: &mut ChildBuilder, assets: &MenuAssets) {
         let ButtonWidget {
             text,
             style,
@@ -62,7 +62,7 @@ where
         };
 
         let text_style = TextStyle {
-            font: style.font.clone(),
+            font: assets.font.clone(),
             font_size: style.size,
             color: fg,
         };

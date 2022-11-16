@@ -5,19 +5,15 @@ mod systems;
 mod types;
 mod widgets;
 
-use bevy::{
-    ecs::schedule::ShouldRun,
-    prelude::{EventWriter, Plugin, Res, Resource, SystemSet},
-};
+use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use style::Stylesheet;
+use types::{MenuAssets, MenuOptions};
 
 use std::fmt::Debug;
 use std::hash::Hash;
 
 pub use navigation_menu::NavigationMenu;
-pub use types::{
-    CustomFontData, MenuIcon, MenuItem, MenuSelection, NavigationEvent, RedrawEvent, Selections,
-};
+pub use types::{MenuIcon, MenuItem, MenuSelection, NavigationEvent, RedrawEvent, Selections};
 
 pub struct Menu<A, S, State>
 where
@@ -107,9 +103,11 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_event::<NavigationEvent>()
+        app.insert_resource(MenuOptions::default())
+            .init_resource::<MenuAssets>()
+            .insert_resource(Selections::default())
+            .add_event::<NavigationEvent>()
             .add_event::<RedrawEvent>()
-            .add_startup_system(crate::systems::setup_menu_system)
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(resource_exists::<State, A, S>)

@@ -1,10 +1,7 @@
 use crate::{ActionTrait, ScreenTrait};
-use bevy::{
-    prelude::{AssetServer, Component, Handle, Image, Resource, TextBundle},
-    text::TextStyle,
-    ui::UiImage,
-    utils::HashMap,
-};
+use bevy::prelude::*;
+use bevy::render::texture::{CompressedImageFormats, ImageType};
+use bevy::utils::HashMap;
 
 #[derive(Component)]
 pub struct QuickMenuComponent;
@@ -162,27 +159,24 @@ pub enum MenuIcon {
     Sound,
     Players,
     Settings,
-    Other(String, bool),
+    Other(Handle<Image>),
 }
 
 impl MenuIcon {
-    pub(crate) fn resolve_icon(&self, asset_server: &AssetServer) -> Option<Handle<Image>> {
+    pub(crate) fn resolve_icon(&self, assets: &MenuAssets) -> Option<Handle<Image>> {
         match self {
             MenuIcon::None => None,
-            MenuIcon::Checked => Some(asset_server.load("icons/Checked.png")),
-            MenuIcon::Unchecked => Some(asset_server.load("icons/Unchecked.png")),
-            MenuIcon::Back => Some(asset_server.load("icons/Back.png")),
-            MenuIcon::Controls => Some(asset_server.load("icons/Controls.png")),
-            MenuIcon::Sound => Some(asset_server.load("icons/Sound.png")),
-            MenuIcon::Players => Some(asset_server.load("icons/Players.png")),
-            MenuIcon::Settings => Some(asset_server.load("icons/Settings.png")),
-            MenuIcon::Other(s, _) => Some(asset_server.load(s)),
+            MenuIcon::Checked => Some(assets.icon_checked.clone()),
+            MenuIcon::Unchecked => Some(assets.icon_unchecked.clone()),
+            MenuIcon::Back => Some(assets.icon_back.clone()),
+            MenuIcon::Controls => Some(assets.icon_controls.clone()),
+            MenuIcon::Sound => Some(assets.icon_sound.clone()),
+            MenuIcon::Players => Some(assets.icon_players.clone()),
+            MenuIcon::Settings => Some(assets.icon_settings.clone()),
+            MenuIcon::Other(s) => Some(s.clone()),
         }
     }
 }
-
-#[derive(Resource)]
-pub struct CustomFontData(pub Option<&'static [u8]>);
 
 #[derive(Clone)]
 pub enum WidgetText {
@@ -241,4 +235,116 @@ where
     pub selection: MenuSelection<A, S, State>,
     pub menu_identifier: (&'static str, usize),
     pub selected: bool,
+}
+
+#[derive(Resource, Default, Clone)]
+pub struct MenuOptions {
+    pub font: Option<&'static str>,
+    pub icon_checked: Option<&'static str>,
+    pub icon_unchecked: Option<&'static str>,
+    pub icon_back: Option<&'static str>,
+    pub icon_controls: Option<&'static str>,
+    pub icon_sound: Option<&'static str>,
+    pub icon_players: Option<&'static str>,
+    pub icon_settings: Option<&'static str>,
+}
+
+#[derive(Resource)]
+pub struct MenuAssets {
+    pub font: Handle<Font>,
+    pub icon_checked: Handle<Image>,
+    pub icon_unchecked: Handle<Image>,
+    pub icon_back: Handle<Image>,
+    pub icon_controls: Handle<Image>,
+    pub icon_sound: Handle<Image>,
+    pub icon_players: Handle<Image>,
+    pub icon_settings: Handle<Image>,
+}
+
+impl FromWorld for MenuAssets {
+    fn from_world(world: &mut World) -> Self {
+        let options = world.get_resource::<MenuOptions>().unwrap().clone();
+        let font = {
+            let assets = world.get_resource::<AssetServer>().unwrap();
+            let font = match options.font {
+                Some(font) => assets.load(font),
+                None => world.get_resource_mut::<Assets<Font>>().unwrap().add(
+                    Font::try_from_bytes(include_bytes!("default_font.ttf").to_vec()).unwrap(),
+                ),
+            };
+            font
+        };
+        fn load_icon(
+            alt: Option<&'static str>,
+            else_bytes: &'static [u8],
+            world: &mut World,
+        ) -> Handle<Image> {
+            let assets = world.get_resource::<AssetServer>().unwrap();
+            match alt {
+                Some(image) => assets.load(image),
+                None => world.get_resource_mut::<Assets<Image>>().unwrap().add(
+                    Image::from_buffer(
+                        else_bytes,
+                        ImageType::Extension("png"),
+                        CompressedImageFormats::empty(),
+                        true,
+                    )
+                    .unwrap(),
+                ),
+            }
+        }
+
+        let icon_unchecked = load_icon(
+            options.icon_unchecked,
+            include_bytes!("default_icons/Unchecked.png"),
+            world,
+        );
+
+        let icon_checked = load_icon(
+            options.icon_checked,
+            include_bytes!("default_icons/Checked.png"),
+            world,
+        );
+
+        let icon_back = load_icon(
+            options.icon_back,
+            include_bytes!("default_icons/Back.png"),
+            world,
+        );
+
+        let icon_controls = load_icon(
+            options.icon_controls,
+            include_bytes!("default_icons/Controls.png"),
+            world,
+        );
+
+        let icon_sound = load_icon(
+            options.icon_sound,
+            include_bytes!("default_icons/Sound.png"),
+            world,
+        );
+
+        let icon_players = load_icon(
+            options.icon_players,
+            include_bytes!("default_icons/Players.png"),
+            world,
+        );
+
+        let icon_settings = load_icon(
+            options.icon_settings,
+            include_bytes!("default_icons/Settings.png"),
+            world,
+        );
+
+        Self {
+            font,
+            icon_checked,
+            icon_unchecked,
+            icon_back,
+            icon_controls,
+            icon_sound,
+            icon_players,
+            icon_settings,
+        }
+    }
 }

@@ -42,9 +42,8 @@ impl Plugin for SettingsPlugin {
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera3dBundle::default());
-    let font = asset_server.load("font.ttf");
     // Create a default stylesheet. You can customize these as you wish
-    let sheet = Stylesheet::with_font(font);
+    let sheet = Stylesheet::default();
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear

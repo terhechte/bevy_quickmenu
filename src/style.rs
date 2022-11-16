@@ -58,7 +58,6 @@ impl Default for IconStyle {
 #[derive(Debug, Clone)]
 pub struct StyleEntry {
     pub size: f32,
-    pub font: Handle<Font>,
     pub margin: UiRect,
     pub padding: UiRect,
     pub normal: ControlState,
@@ -71,7 +70,6 @@ impl StyleEntry {
     fn button() -> Self {
         Self {
             size: 20.0,
-            font: Default::default(),
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::normal(),
@@ -85,7 +83,6 @@ impl StyleEntry {
         let gray = Color::rgb(0.7, 0.7, 0.7);
         Self {
             size: 18.0,
-            font: Default::default(),
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::clear(gray),
@@ -98,7 +95,6 @@ impl StyleEntry {
     fn headline() -> Self {
         Self {
             size: 24.0,
-            font: Default::default(),
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::clear(Color::WHITE),
@@ -115,16 +111,6 @@ pub struct Stylesheet {
     pub label: StyleEntry,
     pub headline: StyleEntry,
     pub vertical_spacing: f32,
-}
-
-impl Stylesheet {
-    pub fn with_font(font: Handle<Font>) -> Self {
-        let mut sheet = Self::default();
-        sheet.button.font = font.clone();
-        sheet.label.font = font.clone();
-        sheet.headline.font = font;
-        sheet
-    }
 }
 
 impl Default for Stylesheet {

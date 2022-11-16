@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     style::Stylesheet,
-    types::{self, ButtonComponent, CustomFontData, NavigationEvent, QuickMenuComponent},
+    types::{self, ButtonComponent, MenuAssets, NavigationEvent, QuickMenuComponent},
     ActionTrait, RedrawEvent, ScreenTrait, Selections, SettingsState,
 };
 
@@ -60,40 +60,31 @@ pub fn keyboard_input_system(
     }
 }
 
-pub fn setup_menu_system(
-    mut commands: Commands,
-    mut custom_font: Option<ResMut<CustomFontData>>,
-    stylesheet: Option<Res<Stylesheet>>,
-    mut redraw_writer: EventWriter<RedrawEvent>,
-) {
-    commands.insert_resource(Selections::default());
-    let valid_stylesheet = stylesheet.map(|e| e.clone()).unwrap_or_default();
-    let optional_custom_font = custom_font.as_deref_mut().and_then(|e| e.0.take());
-
-    // insert again, might override the old one with itself
-    commands.insert_resource(valid_stylesheet);
-    redraw_writer.send(RedrawEvent);
-}
-
 pub fn redraw_system<State, A, S>(
     mut commands: Commands,
     existing: Query<Entity, With<QuickMenuComponent>>,
     settings_state: Res<SettingsState<State, A, S>>,
     selections: Res<Selections>,
-    mut redraw_reader: EventReader<RedrawEvent>,
-    asset_server: Res<AssetServer>,
+    redraw_reader: EventReader<RedrawEvent>,
+    assets: Res<MenuAssets>,
+    mut initial_render_done: Local<bool>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    for _ in redraw_reader.iter() {
+    let mut can_redraw = !redraw_reader.is_empty();
+    if !*initial_render_done {
+        *initial_render_done = true;
+        can_redraw = true;
+    }
+    if can_redraw {
         for item in existing.iter() {
             commands.entity(item).despawn_recursive();
         }
         settings_state
             .menu
-            .show(&asset_server, &selections, &mut commands);
+            .show(&assets, &selections, &mut commands);
     }
 }
 
