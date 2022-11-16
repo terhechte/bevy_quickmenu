@@ -110,7 +110,12 @@ where
             .add_event::<RedrawEvent>()
             .add_system_set(
                 SystemSet::new()
-                    .with_run_criteria(resource_exists::<State, A, S>)
+                    .with_run_criteria(resource_exists::<CleanUpUI>)
+                    .with_system(cleanup_system),
+            )
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(resource_exists::<SettingsState<State, A, S>>)
                     .with_system(crate::systems::keyboard_input_system)
                     .with_system(crate::systems::input_system::<State, A, S>)
                     .with_system(crate::systems::mouse_system::<State, A, S>)
@@ -119,11 +124,24 @@ where
     }
 }
 
-pub fn resource_exists<State, A, S>(resource: Option<Res<SettingsState<State, A, S>>>) -> ShouldRun
-where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
+pub fn resource_exists<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
     resource.is_some().into()
+}
+
+/// Remove the menu
+pub fn cleanup(commands: &mut Commands) {
+    commands.init_resource::<CleanUpUI>();
+}
+
+#[derive(Resource, Default)]
+struct CleanUpUI;
+
+pub fn cleanup_system(
+    mut commands: Commands,
+    existing: Query<Entity, With<types::QuickMenuComponent>>,
+) {
+    for item in existing.iter() {
+        commands.entity(item).despawn_recursive();
+    }
+    commands.remove_resource::<CleanUpUI>();
 }
