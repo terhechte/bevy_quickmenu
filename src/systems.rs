@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
 use crate::{
-    style::Stylesheet,
     types::{self, ButtonComponent, MenuAssets, NavigationEvent, QuickMenuComponent},
     ActionTrait, RedrawEvent, ScreenTrait, Selections, SettingsState,
 };
