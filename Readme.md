@@ -13,7 +13,7 @@ Bevy Quickmenu offers all that. It is a super lightweight way of building in-gam
 
 ## Demo
 
-![Example Gif](data/example.gif)
+![Demo Gif](data/demo.gif)
 
 ## Quick Examples
 
