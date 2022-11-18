@@ -1,6 +1,9 @@
 use crate::{
     style::{StyleEntry, Stylesheet},
-    types::{MenuAssets, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections},
+    types::{
+        MenuAssets, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections,
+        VerticalMenuComponent,
+    },
     ActionTrait, ScreenTrait,
 };
 use bevy::prelude::*;
@@ -17,10 +20,14 @@ where
     pub id: &'static str,
     // The items in the menu
     pub items: &'a [MenuItem<State, A, S>],
-    // stylesheet
+    // Our Stylesheet
     pub stylesheet: &'a Stylesheet,
     // Assets
     pub assets: &'a MenuAssets,
+    // Overriding Bevy Style
+    pub style: Option<&'a Style>,
+    // Overriding Bevy Background Color
+    pub background: Option<&'a BackgroundColor>,
 }
 
 impl<'a, State, A, S> VerticalMenu<'a, State, A, S>
@@ -41,16 +48,22 @@ where
             return;
         }
 
+        let style = self.style.cloned().unwrap_or_else(|| Style {
+            align_items: AlignItems::FlexStart,
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(Val::Px(stylesheet.vertical_spacing)),
+            ..default()
+        });
+
+        let background_color = self.background.cloned().unwrap_or_default();
+
         builder
             .spawn(NodeBundle {
-                style: Style {
-                    align_items: AlignItems::FlexStart,
-                    flex_direction: FlexDirection::Column,
-                    padding: UiRect::all(Val::Px(stylesheet.vertical_spacing)),
-                    ..default()
-                },
+                style,
+                background_color,
                 ..default()
             })
+            .insert(VerticalMenuComponent(id))
             .with_children(|parent| {
                 let (selected_idx, selectables) = Self::current_selection(id, items, selections);
 
@@ -150,6 +163,7 @@ where
         None
     }
 
+    #[allow(clippy::type_complexity)]
     fn current_selection(
         id: &'static str,
         items: &'a [MenuItem<State, A, S>],

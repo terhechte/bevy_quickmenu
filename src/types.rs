@@ -6,9 +6,37 @@ use bevy::utils::HashMap;
 #[derive(Component)]
 pub struct QuickMenuComponent;
 
+/// The primary horizontal menu can be queried via this component
+#[derive(Component)]
+pub struct PrimaryMenu;
+
+/// Each vertical menu can be queried via this component
+#[derive(Component)]
+pub struct VerticalMenuComponent(pub &'static str);
+
+/// Each Button in the UI can be queried via this component in order
+/// to further change the appearance
+#[derive(Component)]
+pub struct ButtonComponent<State, A, S>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    pub style: crate::style::StyleEntry,
+    pub selection: MenuSelection<A, S, State>,
+    pub menu_identifier: (&'static str, usize),
+    pub selected: bool,
+}
+
+/// This map holds the currently selected items in each screen / menu
 #[derive(Resource, Default)]
 pub struct Selections(pub HashMap<&'static str, usize>);
 
+/// GamePad and Cursor navigation generates these navigation events
+/// which are then processed by a system and applied to the menu.
+/// Navigation can be customized by sending these events into a
+/// `EventWriter<NavigationEvent>`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NavigationEvent {
     Up,
@@ -17,8 +45,11 @@ pub enum NavigationEvent {
     Back,
 }
 
+/// Whenever a state change in the `SettingsState` is detected,
+/// this event is send in order to tell the UI to re-render itself
 pub struct RedrawEvent;
 
+/// Abstraction over MenuItems in a Screen / Menu
 pub enum MenuItem<State, A, S>
 where
     A: ActionTrait<State = State>,
@@ -97,6 +128,7 @@ where
     }
 }
 
+/// Abstraction over a concrete selection in a screen / menu
 pub enum MenuSelection<A, S, State>
 where
     A: ActionTrait<State = State>,
@@ -150,6 +182,9 @@ where
     }
 }
 
+/// The library comes with some pre-defined icons for several screens.
+/// Custom icons can be used with `MenuIcon::Other` or by overriding
+/// the existing ones via `MenuOptions`
 pub enum MenuIcon {
     None,
     Checked,
@@ -178,9 +213,10 @@ impl MenuIcon {
     }
 }
 
+/// Abstraction over text for buttons and labels
 #[derive(Clone)]
 pub enum WidgetText {
-    PlainText(String), // FIXME: Add support for rich text
+    PlainText(String),
 }
 
 impl WidgetText {
@@ -224,20 +260,9 @@ impl From<String> for WidgetText {
     }
 }
 
-#[derive(Component)]
-pub struct ButtonComponent<State, A, S>
-where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
-    pub style: crate::style::StyleEntry,
-    pub selection: MenuSelection<A, S, State>,
-    pub menu_identifier: (&'static str, usize),
-    pub selected: bool,
-}
-
-#[derive(Resource, Default, Clone)]
+/// Changing these `MenuOptions` allows overriding the provided
+/// images and fonts. Use [`QUickMenuPlugin::with_options`] to do this.
+#[derive(Resource, Default, Clone, Copy)]
 pub struct MenuOptions {
     pub font: Option<&'static str>,
     pub icon_checked: Option<&'static str>,
@@ -263,7 +288,7 @@ pub struct MenuAssets {
 
 impl FromWorld for MenuAssets {
     fn from_world(world: &mut World) -> Self {
-        let options = world.get_resource::<MenuOptions>().unwrap().clone();
+        let options = *(world.get_resource::<MenuOptions>().unwrap());
         let font = {
             let assets = world.get_resource::<AssetServer>().unwrap();
             let font = match options.font {

@@ -1,10 +1,13 @@
+//! Navigation Menu
+//! This is the primary horizontal menu which is used to host the various
+//! screens / vertical menus.
 use bevy::prelude::EventWriter;
 use bevy::prelude::*;
 use std::fmt::Debug;
 
 use crate::{
     style::Stylesheet,
-    types::{MenuAssets, QuickMenuComponent},
+    types::{MenuAssets, PrimaryMenu, QuickMenuComponent},
     Selections,
 };
 
@@ -58,6 +61,7 @@ where
                 },
                 ..default()
             })
+            .insert(PrimaryMenu)
             .with_children(|parent| {
                 for entry in self.stack.iter() {
                     let menu_desc = entry.resolve(&self.state);
@@ -66,6 +70,8 @@ where
                         items: &menu_desc.entries,
                         stylesheet: &self.stylesheet,
                         assets,
+                        style: menu_desc.style.as_ref(),
+                        background: menu_desc.background.as_ref(),
                     }
                     .build(selections, parent);
                 }

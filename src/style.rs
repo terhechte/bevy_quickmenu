@@ -1,3 +1,8 @@
+//! Lightweight abstractions over styles
+//! Instead of using the bevy styles with all their properties, these simplified
+//! styles are mostly used to define the looks of menus and the different
+//! control states of buttons.
+
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -67,7 +72,7 @@ pub struct StyleEntry {
 }
 
 impl StyleEntry {
-    fn button() -> Self {
+    pub fn button() -> Self {
         Self {
             size: 20.0,
             margin: UiRect::all(Val::Px(5.0)),
@@ -79,7 +84,7 @@ impl StyleEntry {
         }
     }
 
-    fn label() -> Self {
+    pub fn label() -> Self {
         let gray = Color::rgb(0.7, 0.7, 0.7);
         Self {
             size: 18.0,
@@ -92,7 +97,7 @@ impl StyleEntry {
         }
     }
 
-    fn headline() -> Self {
+    pub fn headline() -> Self {
         Self {
             size: 24.0,
             margin: UiRect::all(Val::Px(5.0)),
