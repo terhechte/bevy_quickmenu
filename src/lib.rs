@@ -9,7 +9,7 @@ mod widgets;
 
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use style::Stylesheet;
-use types::MenuAssets;
+use types::{CleanUpUI, MenuAssets};
 
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -128,7 +128,7 @@ where
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(resource_exists::<CleanUpUI>)
-                    .with_system(cleanup_system),
+                    .with_system(systems::cleanup_system::<State, A, S>),
             )
             .add_system_set(
                 SystemSet::new()
@@ -173,6 +173,7 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     menu: NavigationMenu<State, A, S>,
+    pub initial_render_done: bool,
 }
 
 impl<State, A, S> MenuState<State, A, S>
@@ -184,6 +185,7 @@ where
     pub fn new(state: State, screen: S, sheet: Option<Stylesheet>) -> Self {
         Self {
             menu: NavigationMenu::new(state, screen, sheet),
+            initial_render_done: false,
         }
     }
 
@@ -204,21 +206,4 @@ where
 /// Helper to only run a system in specific circumstances
 pub fn resource_exists<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
     resource.is_some().into()
-}
-
-/// Helper to remove the Menu. This `Resource` is inserted to notify
-/// the `cleanup_system` that the menu can be removed.
-#[derive(Resource, Default)]
-struct CleanUpUI;
-
-/// If the `CleanUpUI` `Resource` is available, remove the menu and then the resource.
-/// This is used to close the menu when it is not needed anymore.
-pub fn cleanup_system(
-    mut commands: Commands,
-    existing: Query<Entity, With<types::QuickMenuComponent>>,
-) {
-    for item in existing.iter() {
-        commands.entity(item).despawn_recursive();
-    }
-    commands.remove_resource::<CleanUpUI>();
 }

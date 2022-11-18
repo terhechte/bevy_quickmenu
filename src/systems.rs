@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    types::{self, ButtonComponent, MenuAssets, NavigationEvent, QuickMenuComponent},
+    types::{self, ButtonComponent, CleanUpUI, MenuAssets, NavigationEvent, QuickMenuComponent},
     ActionTrait, MenuState, RedrawEvent, ScreenTrait, Selections,
 };
 
@@ -64,19 +64,19 @@ pub fn keyboard_input_system(
 pub fn redraw_system<State, A, S>(
     mut commands: Commands,
     existing: Query<Entity, With<QuickMenuComponent>>,
-    menu_state: Res<MenuState<State, A, S>>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
     selections: Res<Selections>,
     redraw_reader: EventReader<RedrawEvent>,
     assets: Res<MenuAssets>,
-    mut initial_render_done: Local<bool>,
+    // mut initial_render_done: Local<bool>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
     let mut can_redraw = !redraw_reader.is_empty();
-    if !*initial_render_done {
-        *initial_render_done = true;
+    if !menu_state.initial_render_done {
+        menu_state.initial_render_done = true;
         can_redraw = true;
     }
     if can_redraw {
@@ -167,4 +167,23 @@ pub fn mouse_system<State, A, S>(
             }
         }
     }
+}
+
+/// If the `CleanUpUI` `Resource` is available, remove the menu and then the resource.
+/// This is used to close the menu when it is not needed anymore.
+pub fn cleanup_system<State, A, S>(
+    mut commands: Commands,
+    existing: Query<Entity, With<types::QuickMenuComponent>>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
+) where
+    State: Send + Sync + 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    for item in existing.iter() {
+        commands.entity(item).despawn_recursive();
+    }
+    commands.remove_resource::<CleanUpUI>();
+    menu_state.initial_render_done = false;
+    commands.remove_resource::<MenuState<State, A, S>>();
 }

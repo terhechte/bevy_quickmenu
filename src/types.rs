@@ -29,6 +29,11 @@ where
     pub selected: bool,
 }
 
+/// Helper to remove the Menu. This `Resource` is inserted to notify
+/// the `cleanup_system` that the menu can be removed.
+#[derive(Resource, Default)]
+pub struct CleanUpUI;
+
 /// This map holds the currently selected items in each screen / menu
 #[derive(Resource, Default)]
 pub struct Selections(pub HashMap<&'static str, usize>);
