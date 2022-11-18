@@ -1,87 +1,45 @@
-use crate::style::Style;
-use bevy_egui::egui::*;
+use super::Widget;
+use crate::style::StyleEntry;
+use crate::types::{MenuAssets, WidgetLabel};
+use bevy::prelude::*;
 
-pub struct BorderedLabel<'a> {
-    text: &'a WidgetText,
-    min_size: Vec2,
-    style: &'a Style,
+pub struct LabelWidget<'a> {
+    text: &'a WidgetLabel,
+    style: &'a StyleEntry,
 }
 
-impl<'a> BorderedLabel<'a> {
-    pub fn new(text: &'a WidgetText, style: &'a Style) -> Self {
-        Self {
-            text,
-            min_size: Vec2::ZERO,
-            style,
-        }
+impl<'a> LabelWidget<'a> {
+    pub fn new(text: &'a WidgetLabel, style: &'a StyleEntry) -> Self {
+        Self { text, style }
     }
 }
 
-impl<'a> Widget for BorderedLabel<'a> {
-    fn ui(self, ui: &mut Ui) -> Response {
-        let BorderedLabel {
-            text,
-            min_size,
-            style,
-        }: BorderedLabel = self;
+impl<'a> Widget for LabelWidget<'a> {
+    fn build(self, parent: &mut ChildBuilder, assets: &MenuAssets) {
+        let LabelWidget { text, style, .. } = self;
 
-        let total_extra = style.padding.sum() + style.margin.sum();
+        let (bg, fg) = (style.normal.bg, style.selected.fg);
 
-        let wrap_width = ui.available_width() - total_extra.x;
-        let text = text
-            .clone()
-            .into_galley(ui, None, wrap_width, style.text_style.clone());
+        let text_style = TextStyle {
+            font: assets.font.clone(),
+            font_size: style.size,
+            color: fg,
+        };
 
-        let mut desired_size = text.size() + total_extra;
-        desired_size = desired_size.at_least(min_size);
-
-        let (rect, response) =
-            ui.allocate_at_least(desired_size, Sense::focusable_noninteractive());
-        response.widget_info(|| WidgetInfo::labeled(WidgetType::Label, text.text()));
-
-        // Focus the button automatically when it is hovered and the mouse is moving
-        if response.hovered() && ui.ctx().input().pointer.velocity().length_sq() > 0.0 {
-            response.request_focus();
-        }
-
-        if ui.is_rect_visible(rect) {
-            let mut text_rect = rect;
-            text_rect.min += style.padding.left_top() + style.margin.left_top();
-            text_rect.max -= style.padding.right_bottom() + style.margin.right_bottom();
-            text_rect.max.x = text_rect.max.x.max(text_rect.min.x);
-            text_rect.max.y = text_rect.max.y.max(text_rect.min.y);
-
-            let label_pos = ui
-                .layout()
-                .align_size_within_rect(text.size(), text_rect)
-                .min;
-
-            let controlstate = style.normal;
-
-            let mut border_rect = rect;
-            border_rect.min += style.margin.left_top();
-            border_rect.max -= style.margin.right_bottom();
-            border_rect.max.x = border_rect.max.x.max(border_rect.min.x);
-            border_rect.max.y = border_rect.max.y.max(border_rect.min.y);
-
-            if let Some(bg) = controlstate.bg {
-                ui.painter().rect(
-                    border_rect,
-                    controlstate.rounding,
-                    bg,
-                    Stroke::new(controlstate.stroke_width, controlstate.stroke),
-                );
-            } else {
-                ui.painter().rect_stroke(
-                    rect,
-                    controlstate.rounding,
-                    Stroke::new(controlstate.stroke_width, controlstate.stroke),
-                )
-            }
-
-            text.paint_with_fallback_color(ui.painter(), label_pos, controlstate.fg);
-        }
-
-        response
+        parent
+            .spawn(ButtonBundle {
+                style: Style {
+                    margin: style.margin,
+                    padding: style.padding,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: BackgroundColor(bg),
+                ..default()
+            })
+            .with_children(|parent| {
+                parent.spawn(text.bundle(&text_style));
+            });
     }
 }

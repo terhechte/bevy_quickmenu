@@ -1,20 +1,18 @@
 use bevy::prelude::*;
-use bevy_egui::{egui::CentralPanel, EguiContext};
 
 use crate::{
-    style::{register_stylesheet, Stylesheet},
-    types::{CursorDirection, CustomFontData},
-    ActionTrait, ScreenTrait, SettingsState,
+    types::{self, ButtonComponent, CleanUpUI, MenuAssets, NavigationEvent, QuickMenuComponent},
+    ActionTrait, MenuState, RedrawEvent, ScreenTrait, Selections,
 };
 
 pub fn keyboard_input_system(
     keyboard_input: Res<Input<KeyCode>>,
-    mut writer: EventWriter<CursorDirection>,
+    mut writer: EventWriter<NavigationEvent>,
     gamepads: Res<Gamepads>,
     button_inputs: Res<Input<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
 ) {
-    use CursorDirection::*;
+    use NavigationEvent::*;
     if keyboard_input.just_pressed(KeyCode::Down) {
         writer.send(Down);
     } else if keyboard_input.just_pressed(KeyCode::Up) {
@@ -36,12 +34,14 @@ pub fn keyboard_input_system(
         {
             writer.send(Back);
         } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South))
+            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::West))
         {
             writer.send(Select);
-        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East)) {
+        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East))
+            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::North))
+        {
             writer.send(Back);
         }
-
         if axes.is_changed() {
             for (axis, check_negative, action) in [
                 (GamepadAxisType::LeftStickX, true, Back),
@@ -61,79 +61,131 @@ pub fn keyboard_input_system(
     }
 }
 
-pub fn setup_menu_system(
+pub fn redraw_system<State, A, S>(
     mut commands: Commands,
-    mut egui_context: ResMut<EguiContext>,
-    mut custom_font: Option<ResMut<CustomFontData>>,
-    stylesheet: Option<Res<Stylesheet>>,
-) {
-    let valid_stylesheet = stylesheet.map(|e| e.clone()).unwrap_or_default();
-    let optional_custom_font = custom_font.as_deref_mut().and_then(|e| e.0.take());
-    register_stylesheet(
-        &valid_stylesheet,
-        egui_context.ctx_mut(),
-        optional_custom_font,
-    );
-    // insert again, might override the old one with itself
-    commands.insert_resource(valid_stylesheet);
+    existing: Query<Entity, With<QuickMenuComponent>>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
+    selections: Res<Selections>,
+    redraw_reader: EventReader<RedrawEvent>,
+    assets: Res<MenuAssets>,
+    // mut initial_render_done: Local<bool>,
+) where
+    State: Send + Sync + 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    let mut can_redraw = !redraw_reader.is_empty();
+    if !menu_state.initial_render_done {
+        menu_state.initial_render_done = true;
+        can_redraw = true;
+    }
+    if can_redraw {
+        for item in existing.iter() {
+            commands.entity(item).despawn_recursive();
+        }
+        menu_state.menu.show(&assets, &selections, &mut commands);
+    }
 }
 
-pub fn ui_settings_system<State, A, S>(
-    mut egui_context: ResMut<EguiContext>,
-    mut settings_state: ResMut<SettingsState<State, A, S>>,
+pub fn input_system<State, A, S>(
+    mut reader: EventReader<NavigationEvent>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
+    mut redraw_writer: EventWriter<RedrawEvent>,
+    mut selections: ResMut<Selections>,
     mut event_writer: EventWriter<A::Event>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    CentralPanel::default().show(egui_context.ctx_mut(), |ui| {
-        settings_state.menu.show(ui, &mut event_writer);
-    });
+    if let Some(event) = reader.iter().next() {
+        if let Some(selection) = menu_state.menu.apply_event(event, &mut selections) {
+            menu_state
+                .menu
+                .handle_selection(&selection, &mut event_writer);
+        }
+        redraw_writer.send(RedrawEvent);
+    }
 }
 
-pub fn input_system<State, A, S>(
-    mut reader: EventReader<CursorDirection>,
-    mut settings_state: ResMut<SettingsState<State, A, S>>,
+#[allow(clippy::type_complexity)]
+pub fn mouse_system<State, A, S>(
+    mut menu_state: ResMut<MenuState<State, A, S>>,
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &types::ButtonComponent<State, A, S>,
+            &mut BackgroundColor,
+        ),
+        Changed<Interaction>,
+    >,
+    mut event_writer: EventWriter<A::Event>,
+    mut selections: ResMut<Selections>,
+    mut redraw_writer: EventWriter<RedrawEvent>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    if let Some(event) = reader.iter().next() {
-        settings_state.menu.next(*event)
+    for (
+        interaction,
+        ButtonComponent {
+            selection,
+            style,
+            menu_identifier,
+            selected,
+        },
+        mut background_color,
+    ) in &mut interaction_query
+    {
+        match *interaction {
+            Interaction::Clicked => {
+                // pop to the chosen selection stack entry
+                menu_state.menu.pop_to_selection(selection);
+
+                // pre-select the correct row
+                selections.0.insert(menu_identifier.0, menu_identifier.1);
+                if let Some(current) = menu_state
+                    .menu
+                    .apply_event(&NavigationEvent::Select, &mut selections)
+                {
+                    menu_state
+                        .menu
+                        .handle_selection(&current, &mut event_writer);
+                    redraw_writer.send(RedrawEvent);
+                }
+            }
+            Interaction::Hovered => {
+                if !selected {
+                    background_color.0 = style.hover.bg;
+                }
+            }
+            Interaction::None => {
+                if !selected {
+                    background_color.0 = style.normal.bg;
+                }
+            }
+        }
     }
 }
 
-// pub fn update_gamepads_system(
-//     gamepads: Res<Gamepads>,
-//     button_inputs: Res<Input<GamepadButton>>,
-//     button_axes: Res<Axis<GamepadButton>>,
-//     axes: Res<Axis<GamepadAxis>>,
-// ) {
-//     for gamepad in gamepads.iter().cloned() {
-//         if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South)) {
-//             info!("{:?} just pressed South", gamepad);
-//         } else if button_inputs.just_released(GamepadButton::new(gamepad, GamepadButtonType::South))
-//         {
-//             info!("{:?} just released South", gamepad);
-//         }
-
-//         let right_trigger = button_axes
-//             .get(GamepadButton::new(
-//                 gamepad,
-//                 GamepadButtonType::RightTrigger2,
-//             ))
-//             .unwrap();
-//         if right_trigger.abs() > 0.01 {
-//             info!("{:?} RightTrigger2 value is {}", gamepad, right_trigger);
-//         }
-
-//         let left_stick_x = axes
-//             .get(GamepadAxis::new(gamepad, GamepadAxisType::LeftStickX))
-//             .unwrap();
-//         if left_stick_x.abs() > 0.01 {
-//             info!("{:?} LeftStickX value is {}", gamepad, left_stick_x);
-//         }
-//     }
-// }
+/// If the `CleanUpUI` `Resource` is available, remove the menu and then the resource.
+/// This is used to close the menu when it is not needed anymore.
+pub fn cleanup_system<State, A, S>(
+    mut commands: Commands,
+    existing: Query<Entity, With<types::QuickMenuComponent>>,
+    // mut menu_state: ResMut<MenuState<State, A, S>>,
+) where
+    State: Send + Sync + 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    // Remove all menu elements
+    for item in existing.iter() {
+        commands.entity(item).despawn_recursive();
+    }
+    // Remove the resource again
+    commands.remove_resource::<CleanUpUI>();
+    // Remove the state
+    commands.remove_resource::<MenuState<State, A, S>>();
+}

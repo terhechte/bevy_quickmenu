@@ -1,7 +1,9 @@
-mod bordered_button;
+mod button;
 mod label;
 mod vertical_menu;
+mod widget;
 
-pub use bordered_button::BorderedButton;
-pub use label::BorderedLabel;
+pub use button::ButtonWidget;
+pub use label::LabelWidget;
 pub use vertical_menu::VerticalMenu;
+pub use widget::Widget;

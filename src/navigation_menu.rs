@@ -1,11 +1,18 @@
+//! Navigation Menu
+//! This is the primary horizontal menu which is used to host the various
+//! screens / vertical menus.
 use bevy::prelude::EventWriter;
-use bevy_egui::egui::Ui;
+use bevy::prelude::*;
 use std::fmt::Debug;
 
-use crate::{make_menu, style::Stylesheet};
+use crate::{
+    style::Stylesheet,
+    types::{MenuAssets, PrimaryMenu, QuickMenuComponent},
+    Selections,
+};
 
 use super::{
-    types::{CursorDirection, MenuSelection},
+    types::{MenuSelection, NavigationEvent},
     ActionTrait, ScreenTrait,
 };
 
@@ -17,8 +24,6 @@ where
 {
     /// The internal stack of menu screens
     stack: Vec<S>,
-    /// Any user input (cursor keys, gamepad) is set here
-    next_direction: Option<CursorDirection>,
     /// The custom state
     pub(crate) state: State,
     /// The style to use
@@ -33,14 +38,9 @@ where
     pub fn new(state: State, root: S, sheet: Option<Stylesheet>) -> Self {
         Self {
             stack: vec![root],
-            next_direction: None,
             state,
             stylesheet: sheet.unwrap_or_default(),
         }
-    }
-
-    pub fn next(&mut self, direction: CursorDirection) {
-        self.next_direction = Some(direction);
     }
 }
 
@@ -50,45 +50,103 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn show(&mut self, ui: &mut Ui, event_writer: &mut EventWriter<A::Event>) {
-        let next_direction = self.next_direction.take();
+    pub fn show(&self, assets: &MenuAssets, selections: &Selections, commands: &mut Commands) {
+        let style = self
+            .stylesheet
+            .style
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| Style {
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(self.stylesheet.vertical_spacing)),
+                ..default()
+            });
 
-        // Can't pop the root
-        if self.stack.len() > 1 {
-            if let Some(CursorDirection::Back) = next_direction {
-                self.stack.pop();
+        let background_color = self
+            .stylesheet
+            .background
+            .unwrap_or_else(|| Color::NONE.into());
+
+        commands
+            .spawn(NodeBundle {
+                style,
+                background_color,
+                ..default()
+            })
+            .insert(PrimaryMenu)
+            .with_children(|parent| {
+                for entry in self.stack.iter() {
+                    let menu_desc = entry.resolve(&self.state);
+                    super::widgets::VerticalMenu {
+                        id: menu_desc.id,
+                        items: &menu_desc.entries,
+                        stylesheet: &self.stylesheet,
+                        assets,
+                        style: menu_desc.style.as_ref(),
+                        background: menu_desc.background.as_ref(),
+                    }
+                    .build(selections, parent);
+                }
+            })
+            .insert(QuickMenuComponent);
+    }
+
+    pub fn apply_event(
+        &mut self,
+        event: &NavigationEvent,
+        selections: &mut Selections,
+    ) -> Option<MenuSelection<A, S, State>> {
+        if self.stack.len() > 1 && &NavigationEvent::Back == event {
+            self.stack.pop();
+        }
+        for (index, entry) in self.stack.iter().enumerate() {
+            let is_last = (index + 1) == self.stack.len();
+            let menu_desc = entry.resolve(&self.state);
+            if is_last {
+                return super::widgets::VerticalMenu::apply_event(
+                    event,
+                    menu_desc.id,
+                    &menu_desc.entries,
+                    selections,
+                );
             }
         }
+        None
+    }
 
-        let mut next_menu: Option<MenuSelection<A, S, State>> = None;
+    pub fn handle_selection(
+        &mut self,
+        selection: &MenuSelection<A, S, State>,
 
-        ui.horizontal(|ui| {
-            for (index, entry) in self.stack.iter().enumerate() {
-                let is_last = (index + 1) == self.stack.len();
-                let cursor_direction = if is_last { next_direction } else { None };
-                let menu_desc = entry.resolve(&mut self.state);
-                if let Some(next) = make_menu(
-                    ui,
-                    menu_desc.id,
-                    cursor_direction,
-                    &menu_desc.entries,
-                    &self.stylesheet,
-                ) {
-                    if is_last {
-                        next_menu = Some(next);
-                    }
-                }
-                if !is_last {
-                    ui.add_space(self.stylesheet.horizontal_spacing);
+        event_writer: &mut EventWriter<A::Event>,
+    ) {
+        match selection {
+            MenuSelection::Action(a) => a.handle(&mut self.state, event_writer),
+            MenuSelection::Screen(s) => self.stack.push(*s),
+            MenuSelection::None => (),
+        }
+    }
+
+    pub fn pop_to_selection(&mut self, selection: &MenuSelection<A, S, State>) {
+        let mut found = false;
+        let mut items = 0;
+        for entry in self.stack.iter() {
+            let menu_desc = entry.resolve(&self.state);
+
+            if found {
+                items += 1;
+            }
+
+            for entry in menu_desc.entries {
+                if &entry.as_selection() == selection {
+                    found = true;
                 }
             }
-        });
-
-        if let Some(n) = next_menu {
-            match n {
-                MenuSelection::Action(a) => a.handle(&mut self.state, event_writer),
-                MenuSelection::Screen(s) => self.stack.push(s),
-                MenuSelection::None => (),
+        }
+        if self.stack.len() > 1 {
+            for _ in 0..items {
+                self.stack.pop();
             }
         }
     }

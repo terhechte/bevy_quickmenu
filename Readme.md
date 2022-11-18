@@ -1,23 +1,36 @@
-# Bevy Quickmenu (in-development)
+# Bevy Quickmenu
 
-- Simple menu plugin for bevy. This is particular useful for settings or menu screens.
-- Automatically works with keyboard, mouse, and gamepad.
-- Has additional helpers for quickly building control-selection screens (e.g. keyboard or gamepad).
-- Very simple with little flexibility
-- Build-in stylesheet system which allows you to change the looks of the menu
-- Currently (temporarily) requires `bevy 0.9-dev` and `bevy_egui` dev. So if you want to use it you'll have to clone it
+Every game needs menus. Be it for the settings, for a pause screen, or for the main menu when the user enters the game.
 
-# Example
+While Bevy UI allows building menus, it is a cumbersome process especially if nested menus are needed. Even worse, though, is the effort required if you want your menu to be accessible with a keyboard, a gamepad, or the mouse.
+
+Bevy Quickmenu offers all that. It is a super lightweight way of building in-game menus that can be controlled by all input devices. It even offers a simple way of having `hover` states. Everything can also be customized.
+
+- Super simple menu plugin for bevy, building upon Bevy UI
+- Keyboard, Mouse, Gamepad input is processed
+- Support mouse hover states in simplified Stylesheet
+- Many customizations possible (see [examples/custom.rs](examples/custom.rs))
+
+## Demo
 
 ![Example Gif](data/example.gif)
 
-# Usage
+## Quick Examples
 
-[`examples/settings.rs` has a good example](examples/settings.rs). Here's an explanation of the required components:
+- [`examples/basic.rs`](examples/basic.rs): Basic example to show how it works
+- [`examples/settings.rs`](examples/settings.rs): Full blown user settings including switching game states and showing the menu again
+- [`examples/custom.rs`](examples/custom.rs): Showcase customization options
 
-## `State`
+### Screenshot from the customized screen
 
-A generic type that hosts the state of your menu (e.g. which items are selected, and so on)
+![data/customized.png](data/customized.png)
+
+## An explanation of the required components
+
+### `State`
+
+A generic type that hosts the state of your menu (e.g. which items are selected, and so on).
+Whenever this state changes, the menu is automatically redrawn.
 
 ## `Action`
 
@@ -80,26 +93,26 @@ A menu is just a function that returns a list of `MenuItem` to be displayed. Eac
 
 ``` rs
 fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
-    Menu {
-        id: Id::new("root"),
-        entries: vec![
+    Menu::new(
+        Id::new("root"),
+        vec![
             MenuItem::headline("Settings"),
             MenuItem::action("Back", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::screen("Sound", Screens::Sound).with_icon(MenuIcon::Sound),
             MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls),
         ],
-    }
+    )
 }
 
 fn sound_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
-    Menu {
-        id: Id::new("sound"),
-        entries: vec![
+    Menu::new(
+        Id::new("sound"),
+        vec![
             MenuItem::label("Toggles sound and music"),
             MenuItem::action("On", Actions::SoundOn).checked(state.sound_on),
             MenuItem::action("Off", Actions::SoundOff).checked(!state.sound_on),
         ],
-    }
+    )
 }
 ```
 
@@ -112,46 +125,72 @@ In order to give you *some* flexibility, the menu item allows you to return four
 - `MenuItem::action`: A action that is performed when the user selects it
 - `MenuItem::screen`: Dive into a screen when the user selects this
 
-## Setup
-
-Most importantly, the setting will appear or disappear depending on the existence of the `SettingsState` resource:
+In addition, a menu-item can have one of a couple of pre-defined icons or a custom icon
 
 ``` rs
-/// Show the menu
-commands.insert_resource(SettingsState::new(MyState::default, Screens::Root, None)))
+MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls)
+MenuItem::screen("Save", Screens::Save).with_icon(MenuIcon::Other(icons.save.clone()))
 ```
 
+`MenuItem`s can also be checked or unchecked:
+
 ``` rs
-/// Hide the menu
-commands.remove_resource::<SettingsState<MyState, Actions, Screens>>();
+MenuItem::action("On", Actions::SoundOn).checked(state.sound_on)
+MenuItem::action("Off", Actions::SoundOff).checked(!state.sound_on)
 ```
+
+## Displaying a Menu
 
 Here's a the annoated setup function from the example:
 
 ``` rs
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        // Create a default stylesheet. You can customize these as you wish
-        let sheet = Stylesheet::default();
-        // If you want to load a custom font, insert the `CustomFontData` resource
-        app.insert_resource(CustomFontData(Some(FONT_DATA)))
-        // The settings state that will be handed to menus, screens and actions.
-        // If you remove this resource, the menu will disappear
-            .insert_resource(SettingsState::new(
-                CustomState {
-                    sound_on: true,
-                    gamepads: Vec::new(),
-                },
-                Screens::Root,
-                Some(sheet),
-            ))
+        app
             // Register a event that can be called from your action handler
-            .add_event::<MyEvent>()
+            .add_event::<BasicEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
+            .add_plugin(QuickMenuPlugin::<BasicState, Actions, Screens>::new())
             // Some systems
-            .add_system(event_reader)
-            .add_system(update_gamepads_system);
+            .add_startup_system(setup)
+            .add_system(event_reader);
+    }
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn(Camera3dBundle::default());
+    commands.insert_resource(MenuState::new(
+        BasicState::default(),
+        Screens::Root,
+        Some(StyleSheet::default()),
+    ))
+}
+```
+
+## Removing a Menu
+
+In order to remove a menu, there's the `bevy_quickmenu::cleanup` function. Usually, it is best
+to use it with the event that Bevy Quickmenu allows you to register:
+
+``` rs
+#[derive(Debug)]
+enum BasicEvent {
+    Close,
+}
+
+impl ActionTrait for Actions {
+    fn handle(&self, state: &mut BasicState, event_writer: &mut EventWriter<BasicEvent>) {
+        match self {
+            Actions::Close => event_writer.send(BasicEvent::Close),
+        }
+    }
+}
+
+fn event_reader(mut commands: Commands, mut event_reader: EventReader<BasicEvent>) {
+    for event in event_reader.iter() {
+        match event {
+            BasicEvent::Close => bevy_quickmenu::cleanup(&mut commands),
+        }
     }
 }
 ```

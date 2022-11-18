@@ -1,223 +1,146 @@
-use std::collections::BTreeMap;
+//! Lightweight abstractions over styles
+//! Instead of using the bevy styles with all their properties, these simplified
+//! styles are mostly used to define the looks of menus and the different
+//! control states of buttons.
 
-use bevy::prelude::Resource;
-use bevy_egui::egui::{self, style::Margin, Color32, Context, TextStyle};
+use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ControlState {
-    pub fg: Color32,
-    pub bg: Option<Color32>,
-    pub stroke: Color32,
-    pub stroke_width: f32,
-    pub rounding: f32,
+    pub fg: Color,
+    pub bg: Color,
 }
 
 impl ControlState {
-    fn clear(fg: Color32) -> Self {
+    fn clear(fg: Color) -> Self {
         Self {
             fg,
-            bg: None,
-            stroke: Color32::YELLOW,
-            stroke_width: 0.0,
-            rounding: 0.0,
+            bg: Color::rgba(0.0, 0.0, 0.0, 0.0),
         }
     }
     fn normal() -> Self {
         Self {
-            fg: Color32::WHITE,
-            bg: Some(Color32::DARK_BLUE),
-            stroke: Color32::DARK_BLUE,
-            stroke_width: 5.0,
-            rounding: 4.0,
+            fg: Color::WHITE,
+            bg: Color::NAVY,
         }
     }
 
     fn hover() -> Self {
         Self {
-            fg: Color32::WHITE,
-            bg: Some(Color32::DARK_BLUE),
-            stroke: Color32::YELLOW,
-            stroke_width: 4.0,
-            rounding: 4.0,
+            fg: Color::YELLOW,
+            bg: Color::NAVY,
         }
     }
 
     fn selected() -> Self {
         Self {
-            fg: Color32::BLACK,
-            bg: Some(Color32::WHITE),
-            stroke: Color32::YELLOW,
-            stroke_width: 3.0,
-            rounding: 4.0,
+            fg: Color::NAVY,
+            bg: Color::WHITE,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct IconStyle {
-    /// The leading margin is only used for prefix icons
-    pub leading_margin: f32,
-    /// The trailing margin is only used for postfix icons
-    pub trailing_margin: f32,
+    /// The size of the icon
+    pub size: Size,
+    /// The padding
+    pub padding: UiRect,
     /// An alternative foreground color
-    pub foreground_color: Color32,
+    pub tint_color: Color,
 }
 
 impl Default for IconStyle {
     fn default() -> Self {
         Self {
-            leading_margin: 5.0,
-            trailing_margin: 10.0,
-            foreground_color: Color32::WHITE,
-        }
-    }
-}
-
-impl Style {
-    /// Create a new style with the adaptions for the icons for this element
-    pub fn as_iconstyle(&self) -> Style {
-        let control_state = ControlState {
-            fg: self.icon_style.foreground_color,
-            bg: None,
-            stroke: Color32::BLACK,
-            stroke_width: 0.0,
-            rounding: 0.0,
-        };
-        Style {
-            size: self.size,
-            margin: self.margin,
-            padding: self.padding,
-            normal: control_state,
-            hover: control_state,
-            selected: control_state,
-            icon_style: self.icon_style.clone(),
-            text_style: self.text_style.clone(),
+            size: Size::new(Val::Px(32.0), Val::Px(32.0)),
+            padding: UiRect::all(Val::Px(6.0)),
+            tint_color: Color::WHITE,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Style {
+pub struct StyleEntry {
     pub size: f32,
-    pub margin: Margin,
-    pub padding: Margin,
+    pub margin: UiRect,
+    pub padding: UiRect,
     pub normal: ControlState,
     pub hover: ControlState,
     pub selected: ControlState,
     pub icon_style: IconStyle,
-    pub text_style: TextStyle,
 }
 
-impl Style {
-    fn button() -> Self {
+impl StyleEntry {
+    pub fn button() -> Self {
         Self {
             size: 20.0,
-            margin: Margin::same(5.0),
-            padding: Margin::same(5.0),
+            margin: UiRect::all(Val::Px(5.0)),
+            padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::normal(),
             hover: ControlState::hover(),
             selected: ControlState::selected(),
             icon_style: IconStyle::default(),
-            text_style: TextStyle::Button,
         }
     }
 
-    fn label() -> Self {
+    pub fn label() -> Self {
+        let gray = Color::rgb(0.7, 0.7, 0.7);
         Self {
-            size: 14.0,
-            margin: Margin::same(5.0),
-            padding: Margin::same(5.0),
-            normal: ControlState::clear(Color32::GRAY),
-            hover: ControlState::clear(Color32::GRAY),
-            selected: ControlState::clear(Color32::GRAY),
+            size: 18.0,
+            margin: UiRect::all(Val::Px(5.0)),
+            padding: UiRect::all(Val::Px(5.0)),
+            normal: ControlState::clear(gray),
+            hover: ControlState::clear(gray),
+            selected: ControlState::clear(gray),
             icon_style: IconStyle::default(),
-            text_style: TextStyle::Body,
         }
     }
 
-    fn headline() -> Self {
+    pub fn headline() -> Self {
         Self {
             size: 24.0,
-            margin: Margin::same(5.0),
-            padding: Margin::same(5.0),
-            normal: ControlState::clear(Color32::WHITE),
-            hover: ControlState::clear(Color32::WHITE),
-            selected: ControlState::clear(Color32::WHITE),
+            margin: UiRect::all(Val::Px(5.0)),
+            padding: UiRect::all(Val::Px(5.0)),
+            normal: ControlState::clear(Color::WHITE),
+            hover: ControlState::clear(Color::WHITE),
+            selected: ControlState::clear(Color::WHITE),
             icon_style: IconStyle::default(),
-            text_style: TextStyle::Heading,
         }
     }
 }
 
 #[derive(Debug, Clone, Resource)]
 pub struct Stylesheet {
-    pub button: Style,
-    pub label: Style,
-    pub headline: Style,
+    pub button: StyleEntry,
+    pub label: StyleEntry,
+    pub headline: StyleEntry,
     pub vertical_spacing: f32,
-    pub horizontal_spacing: f32,
+    pub style: Option<Style>,
+    pub background: Option<BackgroundColor>,
 }
 
 impl Default for Stylesheet {
     fn default() -> Self {
         Self {
-            button: Style::button(),
-            label: Style::label(),
-            headline: Style::headline(),
+            button: StyleEntry::button(),
+            label: StyleEntry::label(),
+            headline: StyleEntry::headline(),
             vertical_spacing: 10.0,
-            horizontal_spacing: 20.0,
+            style: None,
+            background: None,
         }
     }
 }
 
-pub fn register_stylesheet(
-    stylesheet: &Stylesheet,
-    context: &Context,
-    font_data: Option<&'static [u8]>,
-) {
-    use egui::FontFamily;
-    use egui::FontId;
-    use egui::TextStyle::*;
-
-    let mut text_styles = BTreeMap::new();
-    text_styles.insert(
-        Button,
-        FontId::new(stylesheet.button.size, FontFamily::Proportional),
-    );
-    text_styles.insert(
-        Body,
-        FontId::new(stylesheet.label.size, FontFamily::Proportional),
-    );
-    text_styles.insert(
-        Heading,
-        FontId::new(stylesheet.headline.size, FontFamily::Proportional),
-    );
-
-    if !text_styles.is_empty() {
-        let mut style = (*context.style()).clone();
-        style.text_styles = text_styles;
-        context.set_style(style);
+impl Stylesheet {
+    pub fn with_background(mut self, bg: BackgroundColor) -> Self {
+        self.background = Some(bg);
+        self
     }
 
-    if let Some(custom_data) = font_data {
-        register_font(custom_data, context);
+    pub fn with_style(mut self, style: Style) -> Self {
+        self.style = Some(style);
+        self
     }
-}
-
-fn register_font(data: &'static [u8], context: &Context) {
-    use bevy_egui::egui::{FontData, FontDefinitions, FontFamily};
-
-    let mut fonts = FontDefinitions::default();
-
-    fonts
-        .font_data
-        .insert("custom_font".to_owned(), FontData::from_static(data));
-
-    fonts
-        .families
-        .entry(FontFamily::Proportional)
-        .or_default()
-        .insert(0, "custom_font".to_owned());
-
-    context.set_fonts(fonts);
 }
