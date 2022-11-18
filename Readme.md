@@ -1,5 +1,4 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
-
 [![Doc](https://docs.rs/bevy_quickmenu/badge.svg)](https://docs.rs/bevy_quickmenu)
 [![Crate](https://img.shields.io/crates/v/bevy_quickmenu.svg)](https://crates.io/crates/bevy_quickmenu)
 
