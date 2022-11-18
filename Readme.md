@@ -127,12 +127,13 @@ fn sound_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
 
 ## `MenuItem`
 
-In order to give you *some* flexibility, the menu item allows you to return four different types:
+In order to give you *some* flexibility, the menu item allows you to return five different types:
 
 - `MenuItem::label`: A small text label that cannot be selected
 - `MenuItem::headline`: A big text label that cannot be selected
 - `MenuItem::action`: A action that is performed when the user selects it
 - `MenuItem::screen`: Dive into a screen when the user selects this
+- `MenuItem::image`: A single image (including an optional `Style`)
 
 In addition, a menu-item can have one of a couple of pre-defined icons or a custom icon
 
