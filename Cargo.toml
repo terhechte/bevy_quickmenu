@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["bevy", "bevyui", "ui", "menu"]
 categories = ["game-development", "development-tools"]
 repository = "https://github.com/terhechte/bevy_quickmenu"
+exclude = ["data", "assets", ".vscode", "icons.sketch"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
