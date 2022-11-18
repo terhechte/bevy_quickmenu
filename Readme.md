@@ -1,4 +1,4 @@
-# Bevy Quickmenu
+# 🏃‍♂️ Bevy Quickmenu
 
 Every game needs menus. Be it for the settings, for a pause screen, or for the main menu when the user enters the game.
 
