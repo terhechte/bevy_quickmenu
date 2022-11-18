@@ -373,7 +373,7 @@ impl<const N: usize> From<[RichTextEntry; N]> for WidgetLabel {
 }
 
 /// Changing these `MenuOptions` allows overriding the provided
-/// images and fonts. Use [`QUickMenuPlugin::with_options`] to do this.
+/// images and fonts. Use [`crate::QuickMenuPlugin::with_options`] to do this.
 #[derive(Resource, Default, Clone, Copy)]
 pub struct MenuOptions {
     pub font: Option<&'static str>,

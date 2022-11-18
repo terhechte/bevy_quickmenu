@@ -1,3 +1,8 @@
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
+
+[![Doc](https://docs.rs/bevy_quickmenu/badge.svg)](https://docs.rs/bevy_quickmenu)
+[![Crate](https://img.shields.io/crates/v/bevy_quickmenu.svg)](https://crates.io/crates/bevy_quickmenu)
+
 # 🏃‍♂️ Bevy Quickmenu
 
 Every game needs menus. Be it for the settings, for a pause screen, or for the main menu when the user enters the game.
@@ -10,6 +15,15 @@ Bevy Quickmenu offers all that. It is a super lightweight way of building in-gam
 - Keyboard, Mouse, Gamepad input is processed
 - Support mouse hover states in simplified Stylesheet
 - Many customizations possible (see [examples/custom.rs](examples/custom.rs))
+
+## Usage
+
+Add to `Cargo.toml`:
+
+```toml
+[dependencies]
+bevy_quickmenu = "0.1.1"
+```
 
 ## Demo
 

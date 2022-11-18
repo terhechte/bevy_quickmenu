@@ -539,7 +539,7 @@ checksum = "c36f4d3af0cda50c07e2010d0351ab79594681116edd280592ca394db73ef32b"
 
 [[package]]
 name = "bevy_quickmenu"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
 ]
