@@ -21,10 +21,6 @@ Bevy Quickmenu offers all that. It is a super lightweight way of building in-gam
 - [`examples/settings.rs`](examples/settings.rs): Full blown user settings including switching game states and showing the menu again
 - [`examples/custom.rs`](examples/custom.rs): Showcase customization options
 
-### Screenshot from the customized screen
-
-![data/customized.png](data/customized.png)
-
 ## An explanation of the required components
 
 ### `State`
@@ -194,3 +190,7 @@ fn event_reader(mut commands: Commands, mut event_reader: EventReader<BasicEvent
     }
 }
 ```
+
+### Screenshot from the customized screen
+
+![data/customized.png](data/customized.png)
