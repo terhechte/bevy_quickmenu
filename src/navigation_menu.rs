@@ -63,7 +63,10 @@ where
                 ..default()
             });
 
-        let background_color = self.stylesheet.background.unwrap_or_default();
+        let background_color = self
+            .stylesheet
+            .background
+            .unwrap_or_else(|| Color::NONE.into());
 
         commands
             .spawn(NodeBundle {

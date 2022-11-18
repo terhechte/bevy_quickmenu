@@ -1,3 +1,6 @@
+//! Basic Example
+//! A basic example that shows how to open a menu with boolen values
+//! that can be toggled
 use bevy::prelude::*;
 
 use bevy_quickmenu::{
@@ -47,8 +50,6 @@ fn setup(mut commands: Commands) {
     // Create a default stylesheet. You can customize these as you wish
     let sheet = Stylesheet::default();
 
-    // The settings state that will be handed to menus, screens and actions.
-    // If you remove this resource, the menu will disappear
     commands.insert_resource(MenuState::new(
         BasicState::default(),
         Screens::Root,

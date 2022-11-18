@@ -1,3 +1,6 @@
+//! A Settings example
+//! This example mimics in-game settings with player and sound controls.
+//! It also adds some types to simulate gamepad and keyboard settings.
 use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
@@ -47,10 +50,8 @@ impl Plugin for SettingsPlugin {
 fn setup(mut commands: Commands) {
     commands.spawn(Camera3dBundle::default());
     // Create a default stylesheet. You can customize these as you wish
-    let sheet = Stylesheet::default();
+    let sheet = Stylesheet::default().with_background(BackgroundColor(Color::BLACK));
 
-    // The settings state that will be handed to menus, screens and actions.
-    // If you remove this resource, the menu will disappear
     commands.insert_resource(MenuState::new(
         CustomState {
             sound_on: true,

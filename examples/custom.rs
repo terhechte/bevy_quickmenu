@@ -1,3 +1,13 @@
+//! Customize the Quickmenu
+//!
+//! This example shows how to customize the quickmenu via:
+//! - Custom `Style` entries
+//! - Customzing the button ControlStates in the Stylesheet
+//! - Loading a custom font
+//! - Using a custom icon
+//! - Using Rich Text
+//! - Using background colors for the menus
+
 use bevy::prelude::*;
 
 use bevy_quickmenu::{
@@ -72,8 +82,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     };
 
-    // The settings state that will be handed to menus, screens and actions.
-    // If you remove this resource, the menu will disappear
     commands.insert_resource(MenuState::new(state, Screens::Root, Some(sheet)));
 }
 

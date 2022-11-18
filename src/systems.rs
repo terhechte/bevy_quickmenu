@@ -34,12 +34,14 @@ pub fn keyboard_input_system(
         {
             writer.send(Back);
         } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South))
+            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::West))
         {
             writer.send(Select);
-        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East)) {
+        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East))
+            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::North))
+        {
             writer.send(Back);
         }
-
         if axes.is_changed() {
             for (axis, check_negative, action) in [
                 (GamepadAxisType::LeftStickX, true, Back),
