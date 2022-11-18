@@ -1,8 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
-    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, MenuState,
-    QuickMenuPlugin, ScreenTrait,
+    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuState, QuickMenuPlugin,
+    ScreenTrait,
 };
 
 fn main() {

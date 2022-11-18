@@ -25,6 +25,7 @@ enum BasicEvent {
 struct BasicState {
     boolean1: bool,
     boolean2: bool,
+    custom_icon: Handle<Image>,
 }
 
 pub struct BasicPlugin;
@@ -48,7 +49,7 @@ impl Plugin for BasicPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera3dBundle::default());
     // Create a customized stylesheet
     let mut button_style = StyleEntry::button();
@@ -61,15 +62,16 @@ fn setup(mut commands: Commands) {
     let sheet = Stylesheet {
         button: button_style,
         ..Default::default()
-    };
+    }
+    .with_background(BackgroundColor(Color::BISQUE));
+
+    // Load custom icons
+    let mut state = BasicState::default();
+    state.custom_icon = asset_server.load("Custom.png");
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear
-    commands.insert_resource(MenuState::new(
-        BasicState::default(),
-        Screens::Root,
-        Some(sheet),
-    ));
+    commands.insert_resource(MenuState::new(state, Screens::Root, Some(sheet)));
 }
 
 /// The possible actions in our settings
@@ -112,14 +114,15 @@ impl ScreenTrait for Screens {
 }
 
 /// The `root` menu that is displayed first
-fn root_menu(_state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+fn root_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
     Menu::new(
         "root",
         vec![
             MenuItem::headline("Basic Example"),
             MenuItem::action("Close", Actions::Close).with_icon(MenuIcon::Back),
-            MenuItem::label("A submenu"),
-            MenuItem::screen("Boolean", Screens::Booleans),
+            MenuItem::label("Use a custom Icon"),
+            MenuItem::screen("Boolean", Screens::Booleans)
+                .with_icon(MenuIcon::Other(state.custom_icon.clone())),
         ],
     )
     .with_background(BackgroundColor(Color::BLACK))

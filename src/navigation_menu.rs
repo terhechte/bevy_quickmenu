@@ -51,14 +51,24 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     pub fn show(&self, assets: &MenuAssets, selections: &Selections, commands: &mut Commands) {
+        let style = self
+            .stylesheet
+            .style
+            .as_ref()
+            .cloned()
+            .unwrap_or_else(|| Style {
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(self.stylesheet.vertical_spacing)),
+                ..default()
+            });
+
+        let background_color = self.stylesheet.background.unwrap_or_default();
+
         commands
             .spawn(NodeBundle {
-                style: Style {
-                    align_items: AlignItems::FlexStart,
-                    flex_direction: FlexDirection::Row,
-                    padding: UiRect::all(Val::Px(self.stylesheet.vertical_spacing)),
-                    ..default()
-                },
+                style,
+                background_color,
                 ..default()
             })
             .insert(PrimaryMenu)

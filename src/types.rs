@@ -49,6 +49,45 @@ pub enum NavigationEvent {
 /// this event is send in order to tell the UI to re-render itself
 pub struct RedrawEvent;
 
+/// Create a menu with an identifier and a `Vec` of `MenuItem` entries
+pub struct Menu<A, S, State>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    pub id: &'static str,
+    pub entries: Vec<MenuItem<State, A, S>>,
+    pub style: Option<Style>,
+    pub background: Option<BackgroundColor>,
+}
+
+impl<A, S, State> Menu<A, S, State>
+where
+    State: 'static,
+    A: ActionTrait<State = State> + 'static,
+    S: ScreenTrait<Action = A> + 'static,
+{
+    pub fn new(id: &'static str, entries: Vec<MenuItem<State, A, S>>) -> Self {
+        Self {
+            id,
+            entries,
+            style: None,
+            background: None,
+        }
+    }
+
+    pub fn with_background(mut self, bg: BackgroundColor) -> Self {
+        self.background = Some(bg);
+        self
+    }
+
+    pub fn with_style(mut self, style: Style) -> Self {
+        self.style = Some(style);
+        self
+    }
+}
+
 /// Abstraction over MenuItems in a Screen / Menu
 pub enum MenuItem<State, A, S>
 where

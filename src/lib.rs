@@ -16,8 +16,8 @@ use std::hash::Hash;
 
 pub use navigation_menu::NavigationMenu;
 pub use types::{
-    ButtonComponent, MenuIcon, MenuItem, MenuOptions, MenuSelection, NavigationEvent, PrimaryMenu,
-    RedrawEvent, Selections, VerticalMenuComponent,
+    ButtonComponent, Menu, MenuIcon, MenuItem, MenuOptions, MenuSelection, NavigationEvent,
+    PrimaryMenu, RedrawEvent, Selections, VerticalMenuComponent,
 };
 
 /// The quickmenu plugin.
@@ -144,45 +144,6 @@ where
 /// Remove the menu
 pub fn cleanup(commands: &mut Commands) {
     commands.init_resource::<CleanUpUI>();
-}
-
-/// Create a menu with an identifier and a `Vec` of `MenuItem` entries
-pub struct Menu<A, S, State>
-where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
-    pub id: &'static str,
-    pub entries: Vec<MenuItem<State, A, S>>,
-    pub style: Option<Style>,
-    pub background: Option<BackgroundColor>,
-}
-
-impl<A, S, State> Menu<A, S, State>
-where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
-{
-    pub fn new(id: &'static str, entries: Vec<MenuItem<State, A, S>>) -> Self {
-        Self {
-            id,
-            entries,
-            style: None,
-            background: None,
-        }
-    }
-
-    pub fn with_background(mut self, bg: BackgroundColor) -> Self {
-        self.background = Some(bg);
-        self
-    }
-
-    pub fn with_style(mut self, style: Style) -> Self {
-        self.style = Some(style);
-        self
-    }
 }
 
 /// A type conforming to this trait is used to handle the events that

@@ -116,6 +116,8 @@ pub struct Stylesheet {
     pub label: StyleEntry,
     pub headline: StyleEntry,
     pub vertical_spacing: f32,
+    pub style: Option<Style>,
+    pub background: Option<BackgroundColor>,
 }
 
 impl Default for Stylesheet {
@@ -125,6 +127,20 @@ impl Default for Stylesheet {
             label: StyleEntry::label(),
             headline: StyleEntry::headline(),
             vertical_spacing: 10.0,
+            style: None,
+            background: None,
         }
+    }
+}
+
+impl Stylesheet {
+    pub fn with_background(mut self, bg: BackgroundColor) -> Self {
+        self.background = Some(bg);
+        self
+    }
+
+    pub fn with_style(mut self, style: Style) -> Self {
+        self.style = Some(style);
+        self
     }
 }
