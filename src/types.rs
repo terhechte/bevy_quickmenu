@@ -159,10 +159,10 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Screen(arg0, _, _) => f.debug_tuple("Screen").field(&arg0.text()).finish(),
-            Self::Action(arg0, _, _) => f.debug_tuple("Action").field(&arg0.text()).finish(),
-            Self::Label(arg0, _) => f.debug_tuple("Label").field(&arg0.text()).finish(),
-            Self::Headline(arg0, _) => f.debug_tuple("Headline").field(&arg0.text()).finish(),
+            Self::Screen(arg0, _, _) => f.debug_tuple("Screen").field(&arg0.debug_text()).finish(),
+            Self::Action(arg0, _, _) => f.debug_tuple("Action").field(&arg0.debug_text()).finish(),
+            Self::Label(arg0, _) => f.debug_tuple("Label").field(&arg0.debug_text()).finish(),
+            Self::Headline(arg0, _) => f.debug_tuple("Headline").field(&arg0.debug_text()).finish(),
         }
     }
 }
@@ -252,22 +252,71 @@ impl MenuIcon {
     }
 }
 
+/// Simplified Rich-Text that assumes the default font
+#[derive(Clone, Debug, Default)]
+pub struct RichTextEntry {
+    pub text: String,
+    pub color: Option<Color>,
+    pub size: Option<f32>,
+    pub font: Option<Handle<Font>>,
+}
+
+impl RichTextEntry {
+    pub fn new(text: impl AsRef<str>) -> Self {
+        Self {
+            text: text.as_ref().to_string(),
+            ..Default::default()
+        }
+    }
+
+    pub fn new_color(text: impl AsRef<str>, color: Color) -> Self {
+        Self {
+            text: text.as_ref().to_string(),
+            color: Some(color),
+            ..Default::default()
+        }
+    }
+}
+
 /// Abstraction over text for buttons and labels
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum WidgetText {
     PlainText(String),
+    RichText(Vec<RichTextEntry>),
 }
 
 impl WidgetText {
     pub fn bundle(&self, default_style: &TextStyle) -> TextBundle {
         match self {
             Self::PlainText(text) => TextBundle::from_section(text, default_style.clone()),
+            Self::RichText(entries) => TextBundle::from_sections(entries.iter().map(|entry| {
+                TextSection {
+                    value: entry.text.clone(),
+                    style: TextStyle {
+                        font: entry
+                            .font
+                            .as_ref()
+                            .cloned()
+                            .unwrap_or_else(|| default_style.font.clone()),
+                        font_size: entry.size.unwrap_or(default_style.font_size),
+                        color: entry.color.unwrap_or(default_style.color),
+                    },
+                }
+            })),
         }
     }
 
-    pub fn text(&self) -> &str {
+    pub fn debug_text(&self) -> String {
         match self {
-            Self::PlainText(text) => text,
+            Self::PlainText(text) => text.clone(),
+            Self::RichText(entries) => {
+                let mut output = String::new();
+                for entry in entries {
+                    output.push_str(&entry.text);
+                    output.push(' ');
+                }
+                output
+            }
         }
     }
 }
@@ -296,6 +345,13 @@ impl From<String> for WidgetText {
     #[inline]
     fn from(text: String) -> Self {
         Self::PlainText(text)
+    }
+}
+
+impl<const N: usize> From<[RichTextEntry; N]> for WidgetText {
+    #[inline]
+    fn from(rich: [RichTextEntry; N]) -> Self {
+        Self::RichText(rich.to_vec())
     }
 }
 

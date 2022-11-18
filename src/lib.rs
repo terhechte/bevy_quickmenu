@@ -17,7 +17,7 @@ use std::hash::Hash;
 pub use navigation_menu::NavigationMenu;
 pub use types::{
     ButtonComponent, Menu, MenuIcon, MenuItem, MenuOptions, MenuSelection, NavigationEvent,
-    PrimaryMenu, RedrawEvent, Selections, VerticalMenuComponent,
+    PrimaryMenu, RedrawEvent, RichTextEntry, Selections, VerticalMenuComponent,
 };
 
 /// The quickmenu plugin.

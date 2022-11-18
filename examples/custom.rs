@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use bevy_quickmenu::{
     style::{ControlState, StyleEntry, Stylesheet},
-    ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, MenuState, QuickMenuPlugin, ScreenTrait,
+    ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, MenuState, QuickMenuPlugin, RichTextEntry,
+    ScreenTrait,
 };
 
 fn main() {
@@ -66,8 +67,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     .with_background(BackgroundColor(Color::BISQUE));
 
     // Load custom icons
-    let mut state = BasicState::default();
-    state.custom_icon = asset_server.load("Custom.png");
+    let state = BasicState {
+        custom_icon: asset_server.load("Custom.png"),
+        ..Default::default()
+    };
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear
@@ -118,7 +121,11 @@ fn root_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
     Menu::new(
         "root",
         vec![
-            MenuItem::headline("Basic Example"),
+            MenuItem::headline([
+                RichTextEntry::new("Rich "),
+                RichTextEntry::new_color("Text ", Color::RED),
+                RichTextEntry::new_color("!", Color::YELLOW),
+            ]),
             MenuItem::action("Close", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::label("Use a custom Icon"),
             MenuItem::screen("Boolean", Screens::Booleans)
