@@ -1,8 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
-    helpers::ControlDevice, style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem,
-    QuickMenuPlugin, ScreenTrait, SettingsState,
+    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, QuickMenuPlugin,
+    ScreenTrait, SettingsState,
 };
 
 fn main() {
@@ -12,15 +12,19 @@ fn main() {
         .run();
 }
 
+/// This custom event can be emitted by the action handler (below) in order to
+/// process actions with access to the bevy ECS
 #[derive(Debug)]
 enum MyEvent {
     CloseSettings,
 }
 
+/// This state represents the UI. Mutations to this state (via `SettingsState::state_mut`)
+/// cause a re-render of the menu UI
 #[derive(Debug, Clone)]
 struct CustomState {
     sound_on: bool,
-    gamepads: Vec<Gamepad>,
+    gamepads: Vec<(Gamepad, String)>,
     controls: HashMap<usize, ControlDevice>,
 }
 
@@ -32,7 +36,7 @@ impl Plugin for SettingsPlugin {
             // Register a event that can be called from your action handler
             .add_event::<MyEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::default())
+            .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::new())
             // Some systems
             .add_startup_system(setup)
             .add_system(event_reader)
@@ -40,7 +44,7 @@ impl Plugin for SettingsPlugin {
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands) {
     commands.spawn(Camera3dBundle::default());
     // Create a default stylesheet. You can customize these as you wish
     let sheet = Stylesheet::default();
@@ -64,16 +68,27 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ))
 }
 
+/// Whenever a new gamepad connects, get the known gamepads and their names
+/// into our state
 fn update_gamepads_system(
     gamepads: Res<Gamepads>,
     mut settings_state: ResMut<SettingsState<CustomState, Actions, Screens>>,
 ) {
-    let gamepads = gamepads.iter().collect();
+    let gamepads = gamepads
+        .iter()
+        .map(|p| {
+            (
+                p,
+                gamepads.name(p).map(|s| s.to_owned()).unwrap_or_default(),
+            )
+        })
+        .collect();
     if settings_state.state().gamepads != gamepads {
         settings_state.state_mut().gamepads = gamepads;
     }
 }
 
+/// The possible actions in our settings
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Actions {
     Close,
@@ -82,6 +97,7 @@ enum Actions {
     Control(usize, ControlDevice),
 }
 
+/// Handle the possible actions
 impl ActionTrait for Actions {
     type State = CustomState;
     type Event = MyEvent;
@@ -97,12 +113,12 @@ impl ActionTrait for Actions {
     }
 }
 
+/// All possible screens in our settings
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Screens {
     Root,
     Controls,
     Sound,
-    Soundx,
     Player(usize),
 }
 
@@ -113,80 +129,165 @@ impl ScreenTrait for Screens {
             Screens::Root => root_menu(state),
             Screens::Controls => controls_menu(state),
             Screens::Sound => sound_menu(state),
-            Screens::Soundx => sound_menu(state),
             Screens::Player(p) => player_controls_menu(state, *p),
         }
     }
 }
 
+/// The `root` menu that is displayed first
 fn root_menu(_state: &CustomState) -> Menu<Actions, Screens, CustomState> {
-    Menu {
-        id: "root",
-        entries: vec![
+    Menu::new(
+        "root",
+        vec![
             MenuItem::headline("Settings"),
             MenuItem::action("Back", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::screen("Sound", Screens::Sound).with_icon(MenuIcon::Sound),
-            MenuItem::label("Sound and more"),
-            MenuItem::screen("Soundx", Screens::Soundx).with_icon(MenuIcon::Sound),
             MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls),
-            MenuItem::headline("Settings"),
         ],
-    }
+    )
 }
 
+/// This is displayed if the user selects `Sound` in the `root_menu`
 fn sound_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
-    Menu {
-        id: "sound",
-        entries: vec![
+    Menu::new(
+        "sound",
+        vec![
             MenuItem::label("Toggles sound and music"),
             MenuItem::action("On", Actions::SoundOn).checked(state.sound_on),
             MenuItem::action("Off", Actions::SoundOff).checked(!state.sound_on),
         ],
-    }
+    )
 }
 
+/// This is displayed if the user selects `Controls` in the `root_menu`
 fn controls_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
     let mut players: Vec<usize> = state.controls.keys().copied().collect();
     players.sort();
-    Menu {
-        id: "controls",
-        entries: players
+    Menu::new(
+        "controls",
+        players
             .into_iter()
             .map(|player| MenuItem::screen(format!("Player {player}"), Screens::Player(player)))
             .collect(),
-    }
+    )
 }
 
+/// This is displayed if the user selects a player in the `controls_menu`
 fn player_controls_menu(state: &CustomState, player: usize) -> Menu<Actions, Screens, CustomState> {
     let selected_control = state.controls[&player];
-    let mut entries = vec![
+    // Get the Keyboards
+    let mut entries: Vec<_> = vec![
         ControlDevice::keyboard1(),
         ControlDevice::keyboard2(),
         ControlDevice::keyboard3(),
         ControlDevice::keyboard4(),
-    ];
-    entries.append(
-        &mut state
-            .gamepads
-            .iter()
-            .map(|e| ControlDevice::Gamepad { gamepad_id: e.id })
-            .collect(),
-    );
-    let entries = entries
-        .into_iter()
-        .map(|entry| {
-            MenuItem::action(entry.to_string(), Actions::Control(player, entry))
-                .checked(entry.id() == selected_control.id())
-        })
-        .collect();
-    Menu {
-        id: "players",
-        entries,
+    ]
+    .iter()
+    .map(|kb| {
+        MenuItem::action(kb.to_string(), Actions::Control(player, *kb))
+            .checked(kb.id() == selected_control.id())
+    })
+    .collect();
+
+    // Get the GamePads
+    for (pad, title) in &state.gamepads {
+        let device = ControlDevice::Gamepad { gamepad_id: pad.id };
+        entries.push(
+            MenuItem::action(title, Actions::Control(player, device))
+                .checked(device.id() == selected_control.id()),
+        )
+    }
+
+    Menu::new("players", entries)
+}
+
+/// This allows to react to actions with custom bevy resources or eventwriters or queries.
+/// In this example we use it to close the menu
+fn event_reader(mut commands: Commands, mut event_reader: EventReader<MyEvent>) {
+    for event in event_reader.iter() {
+        match event {
+            MyEvent::CloseSettings => bevy_quickmenu::cleanup(&mut commands),
+        }
     }
 }
 
-fn event_reader(mut event_reader: EventReader<MyEvent>) {
-    for event in event_reader.iter() {
-        dbg!(event);
+// Abstractions over control devices
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+pub enum ControlDevice {
+    Gamepad {
+        gamepad_id: usize,
+    },
+    Keyboard {
+        title: &'static str,
+        description: &'static str,
+        keyboard_id: usize,
+        left: KeyCode,
+        right: KeyCode,
+        action: KeyCode,
+    },
+}
+
+impl ControlDevice {
+    pub fn id(&self) -> usize {
+        match self {
+            ControlDevice::Gamepad { gamepad_id, .. } => *gamepad_id,
+            ControlDevice::Keyboard { keyboard_id, .. } => *keyboard_id,
+        }
+    }
+}
+
+impl std::fmt::Display for ControlDevice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ControlDevice::Gamepad { gamepad_id } => {
+                f.write_fmt(format_args!("Gamepad {gamepad_id}",))
+            }
+            ControlDevice::Keyboard { title, .. } => f.write_fmt(format_args!("{title}")),
+        }
+    }
+}
+
+impl ControlDevice {
+    pub fn keyboard1() -> ControlDevice {
+        ControlDevice::Keyboard {
+            title: "Keyboard 1",
+            description: "Left / Right + M",
+            keyboard_id: 42001,
+            left: KeyCode::Left,
+            right: KeyCode::Right,
+            action: KeyCode::M,
+        }
+    }
+
+    pub fn keyboard2() -> ControlDevice {
+        ControlDevice::Keyboard {
+            title: "Keyboard 2",
+            description: "A / D + B",
+            keyboard_id: 42002,
+            left: KeyCode::A,
+            right: KeyCode::D,
+            action: KeyCode::B,
+        }
+    }
+    pub fn keyboard3() -> ControlDevice {
+        ControlDevice::Keyboard {
+            title: "Keyboard 3",
+            description: "I / O + K",
+            keyboard_id: 42003,
+            left: KeyCode::I,
+            right: KeyCode::O,
+            action: KeyCode::K,
+        }
+    }
+    pub fn keyboard4() -> ControlDevice {
+        ControlDevice::Keyboard {
+            title: "Keyboard 4",
+            description: "T / Y + H",
+            keyboard_id: 42004,
+            left: KeyCode::T,
+            right: KeyCode::Y,
+            action: KeyCode::H,
+        }
     }
 }
