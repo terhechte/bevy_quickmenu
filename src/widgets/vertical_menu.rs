@@ -119,6 +119,17 @@ where
                             &stylesheet.headline,
                             LabelWidget::new(t, &stylesheet.headline),
                         ),
+                        MenuItem::Image(i, s) => {
+                            let style = s.clone().unwrap_or_else(|| Style {
+                                align_self: AlignSelf::Center,
+                                ..Default::default()
+                            });
+                            parent.spawn(ImageBundle {
+                                style,
+                                image: i.clone().into(),
+                                ..Default::default()
+                            });
+                        }
                     };
 
                     // Only increase for menu elements, so the indexes pair up

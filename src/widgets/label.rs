@@ -1,15 +1,15 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::{MenuAssets, WidgetText};
+use crate::types::{MenuAssets, WidgetLabel};
 use bevy::prelude::*;
 
 pub struct LabelWidget<'a> {
-    text: &'a WidgetText,
+    text: &'a WidgetLabel,
     style: &'a StyleEntry,
 }
 
 impl<'a> LabelWidget<'a> {
-    pub fn new(text: &'a WidgetText, style: &'a StyleEntry) -> Self {
+    pub fn new(text: &'a WidgetLabel, style: &'a StyleEntry) -> Self {
         Self { text, style }
     }
 }

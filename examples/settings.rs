@@ -58,6 +58,7 @@ mod settings {
         sound_on: bool,
         gamepads: Vec<(Gamepad, String)>,
         controls: HashMap<usize, ControlDevice>,
+        logo: Handle<Image>,
     }
 
     pub struct SettingsPlugin;
@@ -80,7 +81,7 @@ mod settings {
         }
     }
 
-    fn setup_system(mut commands: Commands) {
+    fn setup_system(mut commands: Commands, assets: Res<AssetServer>) {
         // Create a default stylesheet. You can customize these as you wish
         let sheet = Stylesheet::default().with_background(BackgroundColor(Color::BLACK));
 
@@ -95,6 +96,7 @@ mod settings {
                     (3, ControlDevice::keyboard4()),
                 ]
                 .into(),
+                logo: assets.load("logo.png"),
             },
             Screens::Root,
             Some(sheet),
@@ -171,12 +173,13 @@ mod settings {
     }
 
     /// The `root` menu that is displayed first
-    fn root_menu(_state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn root_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
         Menu::new(
             "root",
             vec![
-                MenuItem::headline("Settings"),
-                MenuItem::action("Back", Actions::Close).with_icon(MenuIcon::Back),
+                MenuItem::image(state.logo.clone()),
+                MenuItem::headline("Menu"),
+                MenuItem::action("Start", Actions::Close),
                 MenuItem::screen("Sound", Screens::Sound).with_icon(MenuIcon::Sound),
                 MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls),
             ],

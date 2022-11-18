@@ -94,15 +94,17 @@ where
 }
 
 /// Abstraction over MenuItems in a Screen / Menu
+#[allow(clippy::large_enum_variant)]
 pub enum MenuItem<State, A, S>
 where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
 {
-    Screen(WidgetText, MenuIcon, S),
-    Action(WidgetText, MenuIcon, A),
-    Label(WidgetText, MenuIcon),
-    Headline(WidgetText, MenuIcon),
+    Screen(WidgetLabel, MenuIcon, S),
+    Action(WidgetLabel, MenuIcon, A),
+    Label(WidgetLabel, MenuIcon),
+    Headline(WidgetLabel, MenuIcon),
+    Image(Handle<Image>, Option<Style>),
 }
 
 impl<State, A, S> MenuItem<State, A, S>
@@ -110,20 +112,24 @@ where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
 {
-    pub fn screen(s: impl Into<WidgetText>, screen: S) -> Self {
+    pub fn screen(s: impl Into<WidgetLabel>, screen: S) -> Self {
         MenuItem::Screen(s.into(), MenuIcon::None, screen)
     }
 
-    pub fn action(s: impl Into<WidgetText>, action: A) -> Self {
+    pub fn action(s: impl Into<WidgetLabel>, action: A) -> Self {
         MenuItem::Action(s.into(), MenuIcon::None, action)
     }
 
-    pub fn label(s: impl Into<WidgetText>) -> Self {
+    pub fn label(s: impl Into<WidgetLabel>) -> Self {
         MenuItem::Label(s.into(), MenuIcon::None)
     }
 
-    pub fn headline(s: impl Into<WidgetText>) -> Self {
+    pub fn headline(s: impl Into<WidgetLabel>) -> Self {
         MenuItem::Headline(s.into(), MenuIcon::None)
+    }
+
+    pub fn image(s: Handle<Image>) -> Self {
+        MenuItem::Image(s, None)
     }
 
     pub fn with_icon(self, icon: MenuIcon) -> Self {
@@ -132,6 +138,7 @@ where
             MenuItem::Action(a, _, b) => MenuItem::Action(a, icon, b),
             MenuItem::Label(a, _) => MenuItem::Label(a, icon),
             MenuItem::Headline(a, _) => MenuItem::Headline(a, icon),
+            MenuItem::Image(a, b) => MenuItem::Image(a, b),
         }
     }
 
@@ -149,11 +156,15 @@ where
             MenuItem::Action(_, _, a) => MenuSelection::Action(*a),
             MenuItem::Label(_, _) => MenuSelection::None,
             MenuItem::Headline(_, _) => MenuSelection::None,
+            MenuItem::Image(_, _) => MenuSelection::None,
         }
     }
 
     pub(crate) fn is_selectable(&self) -> bool {
-        !matches!(self, MenuItem::Label(_, _) | MenuItem::Headline(_, _))
+        !matches!(
+            self,
+            MenuItem::Label(_, _) | MenuItem::Headline(_, _) | MenuItem::Image(_, _)
+        )
     }
 }
 
@@ -168,6 +179,7 @@ where
             Self::Action(arg0, _, _) => f.debug_tuple("Action").field(&arg0.debug_text()).finish(),
             Self::Label(arg0, _) => f.debug_tuple("Label").field(&arg0.debug_text()).finish(),
             Self::Headline(arg0, _) => f.debug_tuple("Headline").field(&arg0.debug_text()).finish(),
+            Self::Image(arg0, _) => f.debug_tuple("Image").field(&arg0).finish(),
         }
     }
 }
@@ -285,12 +297,12 @@ impl RichTextEntry {
 
 /// Abstraction over text for buttons and labels
 #[derive(Clone, Debug)]
-pub enum WidgetText {
+pub enum WidgetLabel {
     PlainText(String),
     RichText(Vec<RichTextEntry>),
 }
 
-impl WidgetText {
+impl WidgetLabel {
     pub fn bundle(&self, default_style: &TextStyle) -> TextBundle {
         match self {
             Self::PlainText(text) => TextBundle::from_section(text, default_style.clone()),
@@ -326,34 +338,34 @@ impl WidgetText {
     }
 }
 
-impl Default for WidgetText {
+impl Default for WidgetLabel {
     fn default() -> Self {
         Self::PlainText(String::new())
     }
 }
 
-impl From<&str> for WidgetText {
+impl From<&str> for WidgetLabel {
     #[inline]
     fn from(text: &str) -> Self {
         Self::PlainText(text.to_string())
     }
 }
 
-impl From<&String> for WidgetText {
+impl From<&String> for WidgetLabel {
     #[inline]
     fn from(text: &String) -> Self {
         Self::PlainText(text.clone())
     }
 }
 
-impl From<String> for WidgetText {
+impl From<String> for WidgetLabel {
     #[inline]
     fn from(text: String) -> Self {
         Self::PlainText(text)
     }
 }
 
-impl<const N: usize> From<[RichTextEntry; N]> for WidgetText {
+impl<const N: usize> From<[RichTextEntry; N]> for WidgetLabel {
     #[inline]
     fn from(rich: [RichTextEntry; N]) -> Self {
         Self::RichText(rich.to_vec())

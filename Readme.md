@@ -18,8 +18,12 @@ Bevy Quickmenu offers all that. It is a super lightweight way of building in-gam
 ## Quick Examples
 
 - [`examples/basic.rs`](examples/basic.rs): Basic example to show how it works
-- [`examples/settings.rs`](examples/settings.rs): Full blown user settings
+- [`examples/settings.rs`](examples/settings.rs): Full blown user settings including switching game states and showing the menu again
 - [`examples/custom.rs`](examples/custom.rs): Showcase customization options
+
+### Screenshot from the customized screen
+
+![data/customized.png](data/customized.png)
 
 ## An explanation of the required components
 

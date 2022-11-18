@@ -174,16 +174,18 @@ pub fn mouse_system<State, A, S>(
 pub fn cleanup_system<State, A, S>(
     mut commands: Commands,
     existing: Query<Entity, With<types::QuickMenuComponent>>,
-    mut menu_state: ResMut<MenuState<State, A, S>>,
+    // mut menu_state: ResMut<MenuState<State, A, S>>,
 ) where
     State: Send + Sync + 'static,
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
+    // Remove all menu elements
     for item in existing.iter() {
         commands.entity(item).despawn_recursive();
     }
+    // Remove the resource again
     commands.remove_resource::<CleanUpUI>();
-    menu_state.initial_render_done = false;
+    // Remove the state
     commands.remove_resource::<MenuState<State, A, S>>();
 }

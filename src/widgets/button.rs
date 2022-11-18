@@ -1,6 +1,6 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::{ButtonComponent, MenuAssets, WidgetText};
+use crate::types::{ButtonComponent, MenuAssets, WidgetLabel};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
 
@@ -10,7 +10,7 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    text: &'a WidgetText,
+    text: &'a WidgetLabel,
     style: &'a StyleEntry,
     menu_identifier: (&'static str, usize),
     selection: &'a MenuSelection<A, S, State>,
@@ -24,7 +24,7 @@ where
     S: ScreenTrait<Action = A> + 'static,
 {
     pub fn new(
-        text: &'a WidgetText,
+        text: &'a WidgetLabel,
         style: &'a StyleEntry,
         menu_identifier: (&'static str, usize),
         selection: &'a MenuSelection<A, S, State>,

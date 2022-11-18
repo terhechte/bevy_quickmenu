@@ -2,11 +2,18 @@
 name = "bevy_quickmenu"
 version = "0.1.0"
 edition = "2021"
+authors = ["Benedikt Terhechte"]
+description = "A simple way of quickly creating nested menus in bevy that can be navigated with keys, gamepads and pointers"
+license = "MIT"
+readme = "README.md"
+keywords = ["bevy", "bevyui", "ui", "menu"]
+categories = ["game-development", "development-tools"]
+repository = "https://github.com/terhechte/bevy_quickmenu"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "*"
+bevy = "0.9.0"
 
 [dev-dependencies]
-bevy = "*"
+bevy = "0.9.0"
