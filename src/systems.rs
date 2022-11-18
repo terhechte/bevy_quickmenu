@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     types::{self, ButtonComponent, MenuAssets, NavigationEvent, QuickMenuComponent},
-    ActionTrait, RedrawEvent, ScreenTrait, Selections, SettingsState,
+    ActionTrait, MenuState, RedrawEvent, ScreenTrait, Selections,
 };
 
 pub fn keyboard_input_system(
@@ -62,7 +62,7 @@ pub fn keyboard_input_system(
 pub fn redraw_system<State, A, S>(
     mut commands: Commands,
     existing: Query<Entity, With<QuickMenuComponent>>,
-    settings_state: Res<SettingsState<State, A, S>>,
+    menu_state: Res<MenuState<State, A, S>>,
     selections: Res<Selections>,
     redraw_reader: EventReader<RedrawEvent>,
     assets: Res<MenuAssets>,
@@ -81,15 +81,13 @@ pub fn redraw_system<State, A, S>(
         for item in existing.iter() {
             commands.entity(item).despawn_recursive();
         }
-        settings_state
-            .menu
-            .show(&assets, &selections, &mut commands);
+        menu_state.menu.show(&assets, &selections, &mut commands);
     }
 }
 
 pub fn input_system<State, A, S>(
     mut reader: EventReader<NavigationEvent>,
-    mut settings_state: ResMut<SettingsState<State, A, S>>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
     mut redraw_writer: EventWriter<RedrawEvent>,
     mut selections: ResMut<Selections>,
     mut event_writer: EventWriter<A::Event>,
@@ -99,8 +97,8 @@ pub fn input_system<State, A, S>(
     S: ScreenTrait<Action = A> + 'static,
 {
     if let Some(event) = reader.iter().next() {
-        if let Some(selection) = settings_state.menu.apply_event(event, &mut selections) {
-            settings_state
+        if let Some(selection) = menu_state.menu.apply_event(event, &mut selections) {
+            menu_state
                 .menu
                 .handle_selection(&selection, &mut event_writer);
         }
@@ -110,7 +108,7 @@ pub fn input_system<State, A, S>(
 
 #[allow(clippy::type_complexity)]
 pub fn mouse_system<State, A, S>(
-    mut settings_state: ResMut<SettingsState<State, A, S>>,
+    mut menu_state: ResMut<MenuState<State, A, S>>,
     mut interaction_query: Query<
         (
             &Interaction,
@@ -141,15 +139,15 @@ pub fn mouse_system<State, A, S>(
         match *interaction {
             Interaction::Clicked => {
                 // pop to the chosen selection stack entry
-                settings_state.menu.pop_to_selection(selection);
+                menu_state.menu.pop_to_selection(selection);
 
                 // pre-select the correct row
                 selections.0.insert(menu_identifier.0, menu_identifier.1);
-                if let Some(current) = settings_state
+                if let Some(current) = menu_state
                     .menu
                     .apply_event(&NavigationEvent::Select, &mut selections)
                 {
-                    settings_state
+                    menu_state
                         .menu
                         .handle_selection(&current, &mut event_writer);
                     redraw_writer.send(RedrawEvent);

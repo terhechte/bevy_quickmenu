@@ -132,7 +132,7 @@ where
             )
             .add_system_set(
                 SystemSet::new()
-                    .with_run_criteria(resource_exists::<SettingsState<State, A, S>>)
+                    .with_run_criteria(resource_exists::<MenuState<State, A, S>>)
                     .with_system(crate::systems::keyboard_input_system)
                     .with_system(crate::systems::input_system::<State, A, S>)
                     .with_system(crate::systems::mouse_system::<State, A, S>)
@@ -205,7 +205,7 @@ pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
 
 /// The primary state resource of the menu
 #[derive(Resource)]
-pub struct SettingsState<State, A, S>
+pub struct MenuState<State, A, S>
 where
     State: 'static,
     A: ActionTrait<State = State> + 'static,
@@ -214,7 +214,7 @@ where
     menu: NavigationMenu<State, A, S>,
 }
 
-impl<State, A, S> SettingsState<State, A, S>
+impl<State, A, S> MenuState<State, A, S>
 where
     State: 'static,
     A: ActionTrait<State = State> + 'static,

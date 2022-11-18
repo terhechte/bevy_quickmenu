@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use bevy_quickmenu::{
-    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, QuickMenuPlugin, ScreenTrait,
-    SettingsState,
+    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuState, QuickMenuPlugin,
+    ScreenTrait,
 };
 
 fn main() {
@@ -19,7 +19,7 @@ enum BasicEvent {
     Close,
 }
 
-/// This state represents the UI. Mutations to this state (via `SettingsState::state_mut`)
+/// This state represents the UI. Mutations to this state (via `MenuState::state_mut`)
 /// cause a re-render of the menu UI
 #[derive(Debug, Clone, Default)]
 struct BasicState {
@@ -49,7 +49,7 @@ fn setup(mut commands: Commands) {
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear
-    commands.insert_resource(SettingsState::new(
+    commands.insert_resource(MenuState::new(
         BasicState::default(),
         Screens::Root,
         Some(sheet),

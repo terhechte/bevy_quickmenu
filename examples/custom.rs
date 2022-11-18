@@ -2,8 +2,7 @@ use bevy::prelude::*;
 
 use bevy_quickmenu::{
     style::{ControlState, StyleEntry, Stylesheet},
-    ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, QuickMenuPlugin, ScreenTrait,
-    SettingsState,
+    ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, MenuState, QuickMenuPlugin, ScreenTrait,
 };
 
 fn main() {
@@ -66,7 +65,7 @@ fn setup(mut commands: Commands) {
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear
-    commands.insert_resource(SettingsState::new(
+    commands.insert_resource(MenuState::new(
         BasicState::default(),
         Screens::Root,
         Some(sheet),

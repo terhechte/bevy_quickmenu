@@ -45,7 +45,7 @@ pub enum NavigationEvent {
     Back,
 }
 
-/// Whenever a state change in the `SettingsState` is detected,
+/// Whenever a state change in the `MenuState` is detected,
 /// this event is send in order to tell the UI to re-render itself
 pub struct RedrawEvent;
 

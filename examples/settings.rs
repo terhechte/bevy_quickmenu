@@ -1,8 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
-    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, QuickMenuPlugin,
-    ScreenTrait, SettingsState,
+    style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuOptions, MenuState,
+    QuickMenuPlugin, ScreenTrait,
 };
 
 fn main() {
@@ -19,7 +19,7 @@ enum MyEvent {
     CloseSettings,
 }
 
-/// This state represents the UI. Mutations to this state (via `SettingsState::state_mut`)
+/// This state represents the UI. Mutations to this state (via `MenuState::state_mut`)
 /// cause a re-render of the menu UI
 #[derive(Debug, Clone)]
 struct CustomState {
@@ -51,7 +51,7 @@ fn setup(mut commands: Commands) {
 
     // The settings state that will be handed to menus, screens and actions.
     // If you remove this resource, the menu will disappear
-    commands.insert_resource(SettingsState::new(
+    commands.insert_resource(MenuState::new(
         CustomState {
             sound_on: true,
             gamepads: Vec::new(),
@@ -72,7 +72,7 @@ fn setup(mut commands: Commands) {
 /// into our state
 fn update_gamepads_system(
     gamepads: Res<Gamepads>,
-    mut settings_state: ResMut<SettingsState<CustomState, Actions, Screens>>,
+    mut menu_state: ResMut<MenuState<CustomState, Actions, Screens>>,
 ) {
     let gamepads = gamepads
         .iter()
@@ -83,8 +83,8 @@ fn update_gamepads_system(
             )
         })
         .collect();
-    if settings_state.state().gamepads != gamepads {
-        settings_state.state_mut().gamepads = gamepads;
+    if menu_state.state().gamepads != gamepads {
+        menu_state.state_mut().gamepads = gamepads;
     }
 }
 
