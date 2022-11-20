@@ -2,7 +2,7 @@ use crate::{
     style::{StyleEntry, Stylesheet},
     types::{
         MenuAssets, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections,
-        VerticalMenuComponent,
+        VerticalMenuComponent, WidgetId,
     },
     ActionTrait, ScreenTrait,
 };
@@ -17,7 +17,7 @@ where
     S: ScreenTrait<Action = A>,
 {
     // // Each menu needs a distinct id
-    pub id: &'static str,
+    pub id: WidgetId,
     // The items in the menu
     pub items: &'a [MenuItem<State, A, S>],
     // Our Stylesheet
@@ -66,20 +66,19 @@ where
                 background_color,
                 ..default()
             })
-            .insert(VerticalMenuComponent(id))
             .with_children(|parent| {
-                let (selected_idx, selectables) = Self::current_selection(id, items, selections);
-
+                let (selected_idx, selectables) = Self::current_selection(&id, items, selections);
+                
                 let selected = selectables[selected_idx].1.as_selection();
-
+                
                 let mut index = 0;
                 for item in items {
                     let is_label = matches!(item, MenuItem::Label(_, _));
                     let item_selection = item.as_selection();
                     let focussed = (selected == item_selection) && !is_label;
-
+                    
                     match item {
-                        MenuItem::Screen(t, i, _) => self.add_item(
+                        MenuItem::Screen(t, i, _) => Self::add_item(
                             assets,
                             parent,
                             i,
@@ -87,12 +86,12 @@ where
                             ButtonWidget::new(
                                 t,
                                 &stylesheet.button,
-                                (id, index),
+                                (id.clone(), index),
                                 &item_selection,
                                 focussed,
                             ),
                         ),
-                        MenuItem::Action(t, i, _) => self.add_item(
+                        MenuItem::Action(t, i, _) => Self::add_item(
                             assets,
                             parent,
                             i,
@@ -100,19 +99,19 @@ where
                             ButtonWidget::new(
                                 t,
                                 &stylesheet.button,
-                                (id, index),
+                                (id.clone(), index),
                                 &item_selection,
                                 focussed,
                             ),
                         ),
-                        MenuItem::Label(t, i) => self.add_item(
+                        MenuItem::Label(t, i) => Self::add_item(
                             assets,
                             parent,
                             i,
                             &stylesheet.label,
                             LabelWidget::new(t, &stylesheet.label),
                         ),
-                        MenuItem::Headline(t, i) => self.add_item(
+                        MenuItem::Headline(t, i) => Self::add_item(
                             assets,
                             parent,
                             i,
@@ -131,23 +130,24 @@ where
                             });
                         }
                     };
-
+                    
                     // Only increase for menu elements, so the indexes pair up
                     // with the `selectables` indexes
                     if item_selection != MenuSelection::None {
                         index += 1;
                     }
                 }
-            });
+            })
+            .insert(VerticalMenuComponent(id));
     }
 
     pub fn apply_event(
         event: &NavigationEvent,
-        id: &'static str,
+        id: WidgetId,
         items: &'a [MenuItem<State, A, S>],
         selections: &mut Selections,
     ) -> Option<MenuSelection<A, S, State>> {
-        let (mut selectable_index, selectables) = Self::current_selection(id, items, selections);
+        let (mut selectable_index, selectables) = Self::current_selection(&id, items, selections);
 
         let mut select_navigation = false;
 
@@ -179,7 +179,7 @@ where
 
     #[allow(clippy::type_complexity)]
     fn current_selection(
-        id: &'static str,
+        id: &WidgetId,
         items: &'a [MenuItem<State, A, S>],
         selections: &Selections,
     ) -> (usize, Vec<(usize, &'a MenuItem<State, A, S>)>) {
@@ -201,7 +201,6 @@ where
     }
 
     fn add_item(
-        &self,
         assets: &MenuAssets,
         parent: &mut ChildBuilder,
         icon: &MenuIcon,
@@ -230,7 +229,7 @@ where
                         ..Default::default()
                     });
                 }
-                widget.build(parent, self.assets);
+                widget.build(parent, assets);
             });
     }
 }
