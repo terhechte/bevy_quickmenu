@@ -22,7 +22,7 @@ where
     pub fn new(
         text: &'a WidgetLabel,
         style: &'a StyleEntry,
-        menu_identifier: (&'static str, usize),
+        menu_identifier: (WidgetId, usize),
         selection: &'a MenuSelection<S>,
         selected: bool,
     ) -> Self {
