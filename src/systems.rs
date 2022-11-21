@@ -138,7 +138,7 @@ pub fn mouse_system<S>(
                 menu_state.menu.pop_to_selection(selection);
 
                 // pre-select the correct row
-                selections.0.insert(menu_identifier.0, menu_identifier.1);
+                selections.0.insert(menu_identifier.0.clone(), menu_identifier.1);
                 if let Some(current) = menu_state
                     .menu
                     .apply_event(&NavigationEvent::Select, &mut selections)

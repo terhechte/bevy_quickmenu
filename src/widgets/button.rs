@@ -1,6 +1,6 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::{ButtonComponent, MenuAssets, WidgetLabel};
+use crate::types::{ButtonComponent, MenuAssets, WidgetLabel, WidgetId};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
 
@@ -11,7 +11,7 @@ where
     text: &'a WidgetLabel,
     style: &'a StyleEntry,
     menu_identifier: (&'static str, usize),
-    selection: &'a MenuSelection<S>,
+    selection: &'a MenuSelection<A, S, State>,
     selected: bool,
 }
 
@@ -23,7 +23,7 @@ where
         text: &'a WidgetLabel,
         style: &'a StyleEntry,
         menu_identifier: (&'static str, usize),
-        selection: &'a MenuSelection<S>,
+        selection: &'a MenuSelection<A, S, State>,
         selected: bool,
     ) -> Self {
         Self {

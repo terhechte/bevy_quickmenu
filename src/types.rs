@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+use std::hash::Hash;
+
 use crate::{ActionTrait, ScreenTrait};
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
@@ -12,7 +15,7 @@ pub struct PrimaryMenu;
 
 /// Each vertical menu can be queried via this component
 #[derive(Component)]
-pub struct VerticalMenuComponent(pub &'static str);
+pub struct VerticalMenuComponent(pub WidgetId);
 
 /// Each Button in the UI can be queried via this component in order
 /// to further change the appearance
@@ -23,7 +26,7 @@ where
 {
     pub style: crate::style::StyleEntry,
     pub selection: MenuSelection<S>,
-    pub menu_identifier: (&'static str, usize),
+    pub menu_identifier: (WidgetId, usize),
     pub selected: bool,
 }
 
@@ -34,7 +37,7 @@ pub struct CleanUpUI;
 
 /// This map holds the currently selected items in each screen / menu
 #[derive(Resource, Default)]
-pub struct Selections(pub HashMap<&'static str, usize>);
+pub struct Selections(pub HashMap<WidgetId, usize>);
 
 /// GamePad and Cursor navigation generates these navigation events
 /// which are then processed by a system and applied to the menu.
@@ -59,7 +62,7 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub id: &'static str,
+    pub id: WidgetId,
     pub entries: Vec<MenuItem<State, A, S>>,
     pub style: Option<Style>,
     pub background: Option<BackgroundColor>,
@@ -71,7 +74,8 @@ where
     A: ActionTrait<State = State> + 'static,
     S: ScreenTrait<Action = A> + 'static,
 {
-    pub fn new(id: &'static str, entries: Vec<MenuItem<State, A, S>>) -> Self {
+    pub fn new(id: impl Into<WidgetId>, entries: Vec<MenuItem<State, A, S>>) -> Self {
+        let id = id.into();
         Self {
             id,
             entries,
@@ -480,5 +484,81 @@ impl FromWorld for MenuAssets {
             icon_players,
             icon_settings,
         }
+    }
+}
+
+#[derive(Eq, Clone)]
+pub struct WidgetId {
+    id: Cow<'static, str>,
+    hash: u64,
+}
+
+impl std::fmt::Debug for WidgetId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl Hash for WidgetId {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl PartialEq for WidgetId {
+    fn eq(&self, other: &Self) -> bool {
+        if self.hash != other.hash {
+            return false;
+        }
+        self.id == other.id
+    }
+}
+
+impl WidgetId {
+    /// Creates a new [`Name`] from any string-like type.
+    ///
+    /// The internal hash will be computed immediately.
+    pub fn new(name: impl Into<Cow<'static, str>>) -> Self {
+        let name = name.into();
+        let mut name = WidgetId { id: name, hash: 0 };
+        name.update_hash();
+        name
+    }
+
+    /// Sets the entity's name.
+    ///
+    /// The internal hash will be re-computed.
+    #[inline(always)]
+    pub fn set(&mut self, name: impl Into<Cow<'static, str>>) {
+        *self = WidgetId::new(name);
+    }
+
+    /// Updates the name of the entity in place.
+    ///
+    /// This will allocate a new string if the name was previously
+    /// created from a borrow.
+    #[inline(always)]
+    pub fn mutate<F: FnOnce(&mut String)>(&mut self, f: F) {
+        f(self.id.to_mut());
+        self.update_hash();
+    }
+
+    /// Gets the name of the entity as a `&str`.
+    #[inline(always)]
+    pub fn as_str(&self) -> &str {
+        &self.id
+    }
+
+    fn update_hash(&mut self) {
+        use std::hash::Hasher;
+        let mut hasher = std::collections::hash_map::DefaultHasher::default();
+        self.id.hash(&mut hasher);
+        self.hash = hasher.finish();
+    }
+}
+
+impl<T: Into<Cow<'static, str>>> From<T> for WidgetId {
+    fn from(value: T) -> Self {
+        WidgetId::new(value)
     }
 }
