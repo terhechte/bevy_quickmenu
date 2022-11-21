@@ -38,7 +38,7 @@ impl Plugin for BasicPlugin {
             // Register a event that can be called from your action handler
             .add_event::<BasicEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<BasicState, Actions, Screens>::new())
+            .add_plugin(QuickMenuPlugin::<Screens>::new())
             // Some systems
             .add_startup_system(setup)
             .add_system(event_reader);
@@ -88,6 +88,7 @@ enum Screens {
 /// Map from from `Screens` to the actual menu
 impl ScreenTrait for Screens {
     type Action = Actions;
+    type State = BasicState;
     fn resolve(&self, state: &BasicState) -> Menu<Actions, Screens, BasicState> {
         match self {
             Screens::Root => root_menu(state),

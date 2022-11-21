@@ -146,7 +146,7 @@ where
         id: &'static str,
         items: &'a [MenuItem<State, A, S>],
         selections: &mut Selections,
-    ) -> Option<MenuSelection<A, S, State>> {
+    ) -> Option<MenuSelection<S>> {
         let (mut selectable_index, selectables) = Self::current_selection(id, items, selections);
 
         let mut select_navigation = false;

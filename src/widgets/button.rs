@@ -4,30 +4,26 @@ use crate::types::{ButtonComponent, MenuAssets, WidgetLabel};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
 
-pub struct ButtonWidget<'a, A, S, State>
+pub struct ButtonWidget<'a, S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     text: &'a WidgetLabel,
     style: &'a StyleEntry,
     menu_identifier: (&'static str, usize),
-    selection: &'a MenuSelection<A, S, State>,
+    selection: &'a MenuSelection<S>,
     selected: bool,
 }
 
-impl<'a, A, S, State> ButtonWidget<'a, A, S, State>
+impl<'a, S> ButtonWidget<'a, S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     pub fn new(
         text: &'a WidgetLabel,
         style: &'a StyleEntry,
         menu_identifier: (&'static str, usize),
-        selection: &'a MenuSelection<A, S, State>,
+        selection: &'a MenuSelection<S>,
         selected: bool,
     ) -> Self {
         Self {
@@ -40,7 +36,7 @@ where
     }
 }
 
-impl<'a, A, S, State> Widget for ButtonWidget<'a, A, S, State>
+impl<'a, A, S, State> Widget for ButtonWidget<'a, S>
 where
     State: 'static,
     A: ActionTrait<State = State> + 'static,

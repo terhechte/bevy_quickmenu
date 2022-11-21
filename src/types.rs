@@ -17,14 +17,12 @@ pub struct VerticalMenuComponent(pub &'static str);
 /// Each Button in the UI can be queried via this component in order
 /// to further change the appearance
 #[derive(Component)]
-pub struct ButtonComponent<State, A, S>
+pub struct ButtonComponent<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     pub style: crate::style::StyleEntry,
-    pub selection: MenuSelection<A, S, State>,
+    pub selection: MenuSelection<S>,
     pub menu_identifier: (&'static str, usize),
     pub selected: bool,
 }
@@ -150,7 +148,7 @@ where
         }
     }
 
-    pub(crate) fn as_selection(&self) -> MenuSelection<A, S, State> {
+    pub(crate) fn as_selection(&self) -> MenuSelection<S> {
         match self {
             MenuItem::Screen(_, _, a) => MenuSelection::Screen(*a),
             MenuItem::Action(_, _, a) => MenuSelection::Action(*a),
@@ -185,17 +183,16 @@ where
 }
 
 /// Abstraction over a concrete selection in a screen / menu
-pub enum MenuSelection<A, S, State>
+pub enum MenuSelection<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
-    Action(A),
+    Action(S::Action),
     Screen(S),
     None,
 }
 
-impl<A, S, State> Clone for MenuSelection<A, S, State>
+impl<A, S, State> Clone for MenuSelection<S>
 where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
@@ -209,7 +206,7 @@ where
     }
 }
 
-impl<A, S, State> std::fmt::Debug for MenuSelection<A, S, State>
+impl<A, S, State> std::fmt::Debug for MenuSelection<S>
 where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,
@@ -223,7 +220,7 @@ where
     }
 }
 
-impl<A, S, State> PartialEq for MenuSelection<A, S, State>
+impl<A, S, State> PartialEq for MenuSelection<S>
 where
     A: ActionTrait<State = State>,
     S: ScreenTrait<Action = A>,

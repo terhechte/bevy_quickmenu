@@ -61,18 +61,16 @@ pub fn keyboard_input_system(
     }
 }
 
-pub fn redraw_system<State, A, S>(
+pub fn redraw_system<S>(
     mut commands: Commands,
     existing: Query<Entity, With<QuickMenuComponent>>,
-    mut menu_state: ResMut<MenuState<State, A, S>>,
+    mut menu_state: ResMut<MenuState<S>>,
     selections: Res<Selections>,
     redraw_reader: EventReader<RedrawEvent>,
     assets: Res<MenuAssets>,
     // mut initial_render_done: Local<bool>,
 ) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     let mut can_redraw = !redraw_reader.is_empty();
     if !menu_state.initial_render_done {
@@ -87,16 +85,14 @@ pub fn redraw_system<State, A, S>(
     }
 }
 
-pub fn input_system<State, A, S>(
+pub fn input_system<S>(
     mut reader: EventReader<NavigationEvent>,
-    mut menu_state: ResMut<MenuState<State, A, S>>,
+    mut menu_state: ResMut<MenuState<S>>,
     mut redraw_writer: EventWriter<RedrawEvent>,
     mut selections: ResMut<Selections>,
-    mut event_writer: EventWriter<A::Event>,
+    mut event_writer: EventWriter<<<S as ScreenTrait>::Action as ActionTrait>::Event>,
 ) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     if let Some(event) = reader.iter().next() {
         if let Some(selection) = menu_state.menu.apply_event(event, &mut selections) {
@@ -109,23 +105,21 @@ pub fn input_system<State, A, S>(
 }
 
 #[allow(clippy::type_complexity)]
-pub fn mouse_system<State, A, S>(
-    mut menu_state: ResMut<MenuState<State, A, S>>,
+pub fn mouse_system<S>(
+    mut menu_state: ResMut<MenuState<S>>,
     mut interaction_query: Query<
         (
             &Interaction,
-            &types::ButtonComponent<State, A, S>,
+            &types::ButtonComponent<S>,
             &mut BackgroundColor,
         ),
         Changed<Interaction>,
     >,
-    mut event_writer: EventWriter<A::Event>,
+    mut event_writer: EventWriter<<<S as ScreenTrait>::Action as ActionTrait>::Event>,
     mut selections: ResMut<Selections>,
     mut redraw_writer: EventWriter<RedrawEvent>,
 ) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     for (
         interaction,
@@ -171,14 +165,11 @@ pub fn mouse_system<State, A, S>(
 
 /// If the `CleanUpUI` `Resource` is available, remove the menu and then the resource.
 /// This is used to close the menu when it is not needed anymore.
-pub fn cleanup_system<State, A, S>(
+pub fn cleanup_system<S>(
     mut commands: Commands,
     existing: Query<Entity, With<types::QuickMenuComponent>>,
-    // mut menu_state: ResMut<MenuState<State, A, S>>,
 ) where
-    State: Send + Sync + 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     // Remove all menu elements
     for item in existing.iter() {
@@ -187,5 +178,5 @@ pub fn cleanup_system<State, A, S>(
     // Remove the resource again
     commands.remove_resource::<CleanUpUI>();
     // Remove the state
-    commands.remove_resource::<MenuState<State, A, S>>();
+    commands.remove_resource::<MenuState<S>>();
 }

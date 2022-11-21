@@ -69,7 +69,7 @@ mod settings {
                 // Register a event that can be called from your action handler
                 .add_event::<MyEvent>()
                 // The plugin
-                .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::new())
+                .add_plugin(QuickMenuPlugin::<Screens>::new())
                 // Some systems
                 .add_system_set(SystemSet::on_enter(GameState::Settings).with_system(setup_system))
                 .add_system_set(
@@ -107,7 +107,7 @@ mod settings {
     /// into our state
     fn update_gamepads_system(
         gamepads: Res<Gamepads>,
-        menu_state: Option<ResMut<MenuState<CustomState, Actions, Screens>>>,
+        menu_state: Option<ResMut<MenuState<Screens>>>,
     ) {
         let Some(mut menu_state) = menu_state else {
             return
@@ -162,6 +162,7 @@ mod settings {
 
     impl ScreenTrait for Screens {
         type Action = Actions;
+        type State = CustomState;
         fn resolve(&self, state: &CustomState) -> Menu<Actions, Screens, CustomState> {
             match self {
                 Screens::Root => root_menu(state),

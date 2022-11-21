@@ -17,23 +17,21 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct NavigationMenu<State, A, S>
+pub struct NavigationMenu<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     /// The internal stack of menu screens
     stack: Vec<S>,
     /// The custom state
-    pub(crate) state: State,
+    pub(crate) state: S::State,
     /// The style to use
     pub(crate) stylesheet: Stylesheet,
 }
 
-impl<State, A, S> NavigationMenu<State, A, S>
+impl<State, S> NavigationMenu<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait<State = State>,
 {
     pub fn new(state: State, root: S, sheet: Option<Stylesheet>) -> Self {
         Self {
@@ -44,11 +42,9 @@ where
     }
 }
 
-impl<State, A, S> NavigationMenu<State, A, S>
+impl<S> NavigationMenu<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     pub fn show(&self, assets: &MenuAssets, selections: &Selections, commands: &mut Commands) {
         let style = self
@@ -96,7 +92,7 @@ where
         &mut self,
         event: &NavigationEvent,
         selections: &mut Selections,
-    ) -> Option<MenuSelection<A, S, State>> {
+    ) -> Option<MenuSelection<S>> {
         if self.stack.len() > 1 && &NavigationEvent::Back == event {
             self.stack.pop();
         }
@@ -117,9 +113,8 @@ where
 
     pub fn handle_selection(
         &mut self,
-        selection: &MenuSelection<A, S, State>,
-
-        event_writer: &mut EventWriter<A::Event>,
+        selection: &MenuSelection<S>,
+        event_writer: &mut EventWriter<<<S as ScreenTrait>::Action as ActionTrait>::Event>,
     ) {
         match selection {
             MenuSelection::Action(a) => a.handle(&mut self.state, event_writer),
@@ -128,7 +123,7 @@ where
         }
     }
 
-    pub fn pop_to_selection(&mut self, selection: &MenuSelection<A, S, State>) {
+    pub fn pop_to_selection(&mut self, selection: &MenuSelection<S>) {
         let mut found = false;
         let mut items = 0;
         for entry in self.stack.iter() {
