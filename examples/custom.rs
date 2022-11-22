@@ -117,7 +117,7 @@ enum Screens {
 impl ScreenTrait for Screens {
     type Action = Actions;
     type State = BasicState;
-    fn resolve(&self, state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+    fn resolve(&self, state: &BasicState) -> Menu<Screens> {
         match self {
             Screens::Root => root_menu(state),
             Screens::Booleans => boolean_menu(state),
@@ -126,7 +126,7 @@ impl ScreenTrait for Screens {
 }
 
 /// The `root` menu that is displayed first
-fn root_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+fn root_menu(state: &BasicState) -> Menu<Screens> {
     Menu::new(
         "root",
         vec![
@@ -145,7 +145,7 @@ fn root_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
 }
 
 /// The boolean menu which is accessed from the `Screens::Boolean` entry in the root_menu
-fn boolean_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+fn boolean_menu(state: &BasicState) -> Menu<Screens> {
     Menu::new(
         "boolean",
         vec![

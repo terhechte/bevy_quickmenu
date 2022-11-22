@@ -152,7 +152,7 @@ pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
     fn resolve(
         &self,
         state: &<<Self as ScreenTrait>::Action as ActionTrait>::State,
-    ) -> Menu<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>;
+    ) -> Menu<Self>;
 }
 
 /// The primary state resource of the menu

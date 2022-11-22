@@ -29,11 +29,11 @@ where
     pub(crate) stylesheet: Stylesheet,
 }
 
-impl<State, S> NavigationMenu<S>
+impl<S> NavigationMenu<S>
 where
-    S: ScreenTrait<State = State>,
+    S: ScreenTrait,
 {
-    pub fn new(state: State, root: S, sheet: Option<Stylesheet>) -> Self {
+    pub fn new(state: S::State, root: S, sheet: Option<Stylesheet>) -> Self {
         Self {
             stack: vec![root],
             state,

@@ -163,7 +163,7 @@ mod settings {
     impl ScreenTrait for Screens {
         type Action = Actions;
         type State = CustomState;
-        fn resolve(&self, state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+        fn resolve(&self, state: &CustomState) -> Menu<Screens> {
             match self {
                 Screens::Root => root_menu(state),
                 Screens::Controls => controls_menu(state),
@@ -174,7 +174,7 @@ mod settings {
     }
 
     /// The `root` menu that is displayed first
-    fn root_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn root_menu(state: &CustomState) -> Menu<Screens> {
         Menu::new(
             "root",
             vec![
@@ -188,7 +188,7 @@ mod settings {
     }
 
     /// This is displayed if the user selects `Sound` in the `root_menu`
-    fn sound_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn sound_menu(state: &CustomState) -> Menu<Screens> {
         Menu::new(
             "sound",
             vec![
@@ -200,7 +200,7 @@ mod settings {
     }
 
     /// This is displayed if the user selects `Controls` in the `root_menu`
-    fn controls_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn controls_menu(state: &CustomState) -> Menu<Screens> {
         let mut players: Vec<usize> = state.controls.keys().copied().collect();
         players.sort();
         Menu::new(
@@ -216,7 +216,7 @@ mod settings {
     fn player_controls_menu(
         state: &CustomState,
         player: usize,
-    ) -> Menu<Actions, Screens, CustomState> {
+    ) -> Menu<Screens> {
         let selected_control = state.controls[&player];
         // Get the Keyboards
         let mut entries: Vec<_> = vec![

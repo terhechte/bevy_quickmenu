@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::hash::Hash;
 
-use crate::{ActionTrait, ScreenTrait};
+use crate::ScreenTrait;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::utils::HashMap;
@@ -56,25 +56,21 @@ pub enum NavigationEvent {
 pub struct RedrawEvent;
 
 /// Create a menu with an identifier and a `Vec` of `MenuItem` entries
-pub struct Menu<A, S, State>
+pub struct Menu<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     pub id: WidgetId,
-    pub entries: Vec<MenuItem<State, A, S>>,
+    pub entries: Vec<MenuItem<S>>,
     pub style: Option<Style>,
     pub background: Option<BackgroundColor>,
 }
 
-impl<A, S, State> Menu<A, S, State>
+impl<S> Menu<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
-    pub fn new(id: impl Into<WidgetId>, entries: Vec<MenuItem<State, A, S>>) -> Self {
+    pub fn new(id: impl Into<WidgetId>, entries: Vec<MenuItem<S>>) -> Self {
         let id = id.into();
         Self {
             id,
@@ -97,28 +93,26 @@ where
 
 /// Abstraction over MenuItems in a Screen / Menu
 #[allow(clippy::large_enum_variant)]
-pub enum MenuItem<State, A, S>
+pub enum MenuItem<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     Screen(WidgetLabel, MenuIcon, S),
-    Action(WidgetLabel, MenuIcon, A),
+    Action(WidgetLabel, MenuIcon, S::Action),
     Label(WidgetLabel, MenuIcon),
     Headline(WidgetLabel, MenuIcon),
     Image(Handle<Image>, Option<Style>),
 }
 
-impl<State, A, S> MenuItem<State, A, S>
+impl<S> MenuItem<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     pub fn screen(s: impl Into<WidgetLabel>, screen: S) -> Self {
         MenuItem::Screen(s.into(), MenuIcon::None, screen)
     }
 
-    pub fn action(s: impl Into<WidgetLabel>, action: A) -> Self {
+    pub fn action(s: impl Into<WidgetLabel>, action: S::Action) -> Self {
         MenuItem::Action(s.into(), MenuIcon::None, action)
     }
 
@@ -170,10 +164,9 @@ where
     }
 }
 
-impl<State, A, S> std::fmt::Debug for MenuItem<State, A, S>
+impl<S> std::fmt::Debug for MenuItem<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -196,10 +189,9 @@ where
     None,
 }
 
-impl<A, S, State> Clone for MenuSelection<S>
+impl<S> Clone for MenuSelection<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     fn clone(&self) -> Self {
         match self {
@@ -210,10 +202,9 @@ where
     }
 }
 
-impl<A, S, State> std::fmt::Debug for MenuSelection<S>
+impl<S> std::fmt::Debug for MenuSelection<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -224,10 +215,9 @@ where
     }
 }
 
-impl<A, S, State> PartialEq for MenuSelection<S>
+impl<S> PartialEq for MenuSelection<S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
