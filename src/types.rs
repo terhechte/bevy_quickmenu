@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::hash::Hash;
 
+
 use crate::ScreenTrait;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
@@ -25,6 +26,7 @@ where
     S: ScreenTrait + 'static,
 {
     pub style: crate::style::StyleEntry,
+
     pub selection: MenuSelection<S>,
     pub menu_identifier: (WidgetId, usize),
     pub selected: bool,
@@ -70,6 +72,7 @@ impl<S> Menu<S>
 where
     S: ScreenTrait + 'static,
 {
+
     pub fn new(id: impl Into<WidgetId>, entries: Vec<MenuItem<S>>) -> Self {
         let id = id.into();
         Self {
