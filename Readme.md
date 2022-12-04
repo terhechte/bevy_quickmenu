@@ -21,7 +21,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-bevy_quickmenu = "0.1.1"
+bevy_quickmenu = "0.1.5"
 ```
 
 ## Demo
