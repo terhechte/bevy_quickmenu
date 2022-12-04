@@ -69,7 +69,7 @@ mod settings {
                 // Register a event that can be called from your action handler
                 .add_event::<MyEvent>()
                 // The plugin
-                .add_plugin(QuickMenuPlugin::<CustomState, Actions, Screens>::new())
+                .add_plugin(QuickMenuPlugin::<Screens>::new())
                 // Some systems
                 .add_system_set(SystemSet::on_enter(GameState::Settings).with_system(setup_system))
                 .add_system_set(
@@ -107,7 +107,7 @@ mod settings {
     /// into our state
     fn update_gamepads_system(
         gamepads: Res<Gamepads>,
-        menu_state: Option<ResMut<MenuState<CustomState, Actions, Screens>>>,
+        menu_state: Option<ResMut<MenuState<Screens>>>,
     ) {
         let Some(mut menu_state) = menu_state else {
             return
@@ -162,7 +162,8 @@ mod settings {
 
     impl ScreenTrait for Screens {
         type Action = Actions;
-        fn resolve(&self, state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+        type State = CustomState;
+        fn resolve(&self, state: &CustomState) -> Menu<Screens> {
             match self {
                 Screens::Root => root_menu(state),
                 Screens::Controls => controls_menu(state),
@@ -173,7 +174,7 @@ mod settings {
     }
 
     /// The `root` menu that is displayed first
-    fn root_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn root_menu(state: &CustomState) -> Menu<Screens> {
         Menu::new(
             "root",
             vec![
@@ -187,7 +188,7 @@ mod settings {
     }
 
     /// This is displayed if the user selects `Sound` in the `root_menu`
-    fn sound_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn sound_menu(state: &CustomState) -> Menu<Screens> {
         Menu::new(
             "sound",
             vec![
@@ -199,7 +200,7 @@ mod settings {
     }
 
     /// This is displayed if the user selects `Controls` in the `root_menu`
-    fn controls_menu(state: &CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn controls_menu(state: &CustomState) -> Menu<Screens> {
         let mut players: Vec<usize> = state.controls.keys().copied().collect();
         players.sort();
         Menu::new(
@@ -215,7 +216,7 @@ mod settings {
     fn player_controls_menu(
         state: &CustomState,
         player: usize,
-    ) -> Menu<Actions, Screens, CustomState> {
+    ) -> Menu<Screens> {
         let selected_control = state.controls[&player];
         // Get the Keyboards
         let mut entries: Vec<_> = vec![

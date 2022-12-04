@@ -4,22 +4,21 @@ use crate::{
         MenuAssets, MenuIcon, MenuItem, MenuSelection, NavigationEvent, Selections,
         VerticalMenuComponent, WidgetId,
     },
-    ActionTrait, ScreenTrait,
+    ScreenTrait,
 };
 use bevy::prelude::*;
 
 use super::Widget;
 use super::{ButtonWidget, LabelWidget};
 
-pub struct VerticalMenu<'a, State, A, S>
+pub struct VerticalMenu<'a, S>
 where
-    A: ActionTrait<State = State>,
-    S: ScreenTrait<Action = A>,
+    S: ScreenTrait,
 {
     // // Each menu needs a distinct id
     pub id: WidgetId,
     // The items in the menu
-    pub items: &'a [MenuItem<State, A, S>],
+    pub items: &'a [MenuItem<S>],
     // Our Stylesheet
     pub stylesheet: &'a Stylesheet,
     // Assets
@@ -30,11 +29,9 @@ where
     pub background: Option<&'a BackgroundColor>,
 }
 
-impl<'a, State, A, S> VerticalMenu<'a, State, A, S>
+impl<'a, S> VerticalMenu<'a, S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     pub fn build(self, selections: &Selections, builder: &mut ChildBuilder) {
         let VerticalMenu {
@@ -144,9 +141,9 @@ where
     pub fn apply_event(
         event: &NavigationEvent,
         id: WidgetId,
-        items: &'a [MenuItem<State, A, S>],
+        items: &'a [MenuItem<S>],
         selections: &mut Selections,
-    ) -> Option<MenuSelection<A, S, State>> {
+    ) -> Option<MenuSelection<S>> {
         let (mut selectable_index, selectables) = Self::current_selection(&id, items, selections);
 
         let mut select_navigation = false;
@@ -180,9 +177,9 @@ where
     #[allow(clippy::type_complexity)]
     fn current_selection(
         id: &WidgetId,
-        items: &'a [MenuItem<State, A, S>],
+        items: &'a [MenuItem<S>],
         selections: &Selections,
-    ) -> (usize, Vec<(usize, &'a MenuItem<State, A, S>)>) {
+    ) -> (usize, Vec<(usize, &'a MenuItem<S>)>) {
         let selectables: Vec<_> = items
             .iter()
             .filter(|e| e.is_selectable())

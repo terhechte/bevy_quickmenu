@@ -75,29 +75,21 @@ pub use types::{
 ///   }
 /// }
 /// ```
-pub struct QuickMenuPlugin<State, A, S>
+pub struct QuickMenuPlugin<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
-    state: std::marker::PhantomData<State>,
-    a: std::marker::PhantomData<A>,
     s: std::marker::PhantomData<S>,
     options: Option<MenuOptions>,
 }
 
-impl<State, A, S> QuickMenuPlugin<State, A, S>
+impl<S> QuickMenuPlugin<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
-            state: Default::default(),
-            a: Default::default(),
             s: Default::default(),
             options: None,
         }
@@ -105,19 +97,17 @@ where
 
     pub fn with_options(options: MenuOptions) -> Self {
         Self {
-            state: Default::default(),
-            a: Default::default(),
             s: Default::default(),
             options: Some(options),
         }
     }
 }
 
-impl<State, A, S> Plugin for QuickMenuPlugin<State, A, S>
+impl<State, A ,S> Plugin for QuickMenuPlugin<S>
 where
     State: 'static + Send + Sync,
     A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait<Action = A, State = State> + 'static,
 {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(self.options.unwrap_or_default())
@@ -128,15 +118,15 @@ where
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(resource_exists::<CleanUpUI>)
-                    .with_system(systems::cleanup_system::<State, A, S>),
+                    .with_system(systems::cleanup_system::<S>),
             )
             .add_system_set(
                 SystemSet::new()
-                    .with_run_criteria(resource_exists::<MenuState<State, A, S>>)
+                    .with_run_criteria(resource_exists::<MenuState<S>>)
                     .with_system(crate::systems::keyboard_input_system)
-                    .with_system(crate::systems::input_system::<State, A, S>)
-                    .with_system(crate::systems::mouse_system::<State, A, S>)
-                    .with_system(crate::systems::redraw_system::<State, A, S>),
+                    .with_system(crate::systems::input_system::<S>)
+                    .with_system(crate::systems::mouse_system::<S>)
+                    .with_system(crate::systems::redraw_system::<S>),
             );
     }
 }
@@ -157,32 +147,29 @@ pub trait ActionTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
 /// Each Menu / Screen uses this trait to define which menu items lead
 /// to which other screens
 pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
-    type Action: ActionTrait;
+    type Action: ActionTrait<State = Self::State>;
+    type State: Send + Sync + 'static;
     fn resolve(
         &self,
         state: &<<Self as ScreenTrait>::Action as ActionTrait>::State,
-    ) -> Menu<Self::Action, Self, <<Self as ScreenTrait>::Action as ActionTrait>::State>;
+    ) -> Menu<Self>;
 }
 
 /// The primary state resource of the menu
 #[derive(Resource)]
-pub struct MenuState<State, A, S>
+pub struct MenuState<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
-    menu: NavigationMenu<State, A, S>,
+    menu: NavigationMenu<S>,
     pub initial_render_done: bool,
 }
 
-impl<State, A, S> MenuState<State, A, S>
+impl<S> MenuState<S>
 where
-    State: 'static,
-    A: ActionTrait<State = State> + 'static,
-    S: ScreenTrait<Action = A> + 'static,
+    S: ScreenTrait + 'static,
 {
-    pub fn new(state: State, screen: S, sheet: Option<Stylesheet>) -> Self {
+    pub fn new(state: S::State, screen: S, sheet: Option<Stylesheet>) -> Self {
         Self {
             menu: NavigationMenu::new(state, screen, sheet),
             initial_render_done: false,
@@ -193,12 +180,12 @@ where
     /// Changing something here will cause a re-render in the next frame.
     /// Due to the way bevy works, just getting this reference, without actually performing
     /// a change is enough to cause a re-render.
-    pub fn state_mut(&mut self) -> &mut State {
+    pub fn state_mut(&mut self) -> &mut S::State {
         &mut self.menu.state
     }
 
     /// Can a immutable reference to the state.
-    pub fn state(&self) -> &State {
+    pub fn state(&self) -> &S::State {
         &self.menu.state
     }
 }

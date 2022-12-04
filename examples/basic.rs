@@ -38,7 +38,7 @@ impl Plugin for BasicPlugin {
             // Register a event that can be called from your action handler
             .add_event::<BasicEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<BasicState, Actions, Screens>::new())
+            .add_plugin(QuickMenuPlugin::<Screens>::new())
             // Some systems
             .add_startup_system(setup)
             .add_system(event_reader);
@@ -88,7 +88,8 @@ enum Screens {
 /// Map from from `Screens` to the actual menu
 impl ScreenTrait for Screens {
     type Action = Actions;
-    fn resolve(&self, state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+    type State = BasicState;
+    fn resolve(&self, state: &BasicState) -> Menu<Screens> {
         match self {
             Screens::Root => root_menu(state),
             Screens::Booleans => boolean_menu(state),
@@ -97,7 +98,7 @@ impl ScreenTrait for Screens {
 }
 
 /// The `root` menu that is displayed first
-fn root_menu(_state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+fn root_menu(_state: &BasicState) -> Menu<Screens> {
     Menu::new(
         "root",
         vec![
@@ -110,7 +111,7 @@ fn root_menu(_state: &BasicState) -> Menu<Actions, Screens, BasicState> {
 }
 
 /// The boolean menu which is accessed from the `Screens::Boolean` entry in the root_menu
-fn boolean_menu(state: &BasicState) -> Menu<Actions, Screens, BasicState> {
+fn boolean_menu(state: &BasicState) -> Menu<Screens> {
     Menu::new(
         "boolean",
         vec![
