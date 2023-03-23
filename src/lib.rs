@@ -7,7 +7,7 @@ mod systems;
 mod types;
 mod widgets;
 
-use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy::prelude::*;
 use style::Stylesheet;
 use types::{CleanUpUI, MenuAssets};
 
@@ -103,7 +103,7 @@ where
     }
 }
 
-impl<State, A ,S> Plugin for QuickMenuPlugin<S>
+impl<State, A, S> Plugin for QuickMenuPlugin<S>
 where
     State: 'static + Send + Sync,
     A: ActionTrait<State = State> + 'static,
@@ -115,19 +115,17 @@ where
             .insert_resource(Selections::default())
             .add_event::<NavigationEvent>()
             .add_event::<RedrawEvent>()
-            .add_system_set(
-                SystemSet::new()
-                    .with_run_criteria(resource_exists::<CleanUpUI>)
-                    .with_system(systems::cleanup_system::<S>),
-            )
-            .add_system_set(
-                SystemSet::new()
-                    .with_run_criteria(resource_exists::<MenuState<S>>)
-                    .with_system(crate::systems::keyboard_input_system)
-                    .with_system(crate::systems::input_system::<S>)
-                    .with_system(crate::systems::mouse_system::<S>)
-                    .with_system(crate::systems::redraw_system::<S>),
-            );
+            .add_system(systems::cleanup_system::<S>.run_if(resource_exists::<CleanUpUI>))
+            .add_systems((
+                    systems::mouse_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::input_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::redraw_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::keyboard_input_system.run_if(resource_exists::<MenuState<S>>)
+                    )
+                )
+            // .add_systems((systems::cleanup_system::<S>).run_if(resource_exists::<CleanUpUI>))
+            // .add_systems((crate::systems::keyboard_input_system,crate::systems::input_system::<S>,crate::systems::mouse_system::<S>,crate::systems::redraw_system::<S>).run_if());
+            ;
     }
 }
 
@@ -149,10 +147,7 @@ pub trait ActionTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Syn
 pub trait ScreenTrait: Debug + PartialEq + Eq + Clone + Copy + Hash + Send + Sync {
     type Action: ActionTrait<State = Self::State>;
     type State: Send + Sync + 'static;
-    fn resolve(
-        &self,
-        state: &<<Self as ScreenTrait>::Action as ActionTrait>::State,
-    ) -> Menu<Self>;
+    fn resolve(&self, state: &<<Self as ScreenTrait>::Action as ActionTrait>::State) -> Menu<Self>;
 }
 
 /// The primary state resource of the menu
@@ -191,6 +186,6 @@ where
 }
 
 /// Helper to only run a system in specific circumstances
-pub fn resource_exists<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
-    resource.is_some().into()
+pub fn resource_exists<T: Resource>(resource: Option<Res<T>>) -> bool {
+    resource.is_some()
 }
