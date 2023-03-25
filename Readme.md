@@ -24,6 +24,13 @@ Add to `Cargo.toml`:
 bevy_quickmenu = "0.1.5"
 ```
 
+### Version Compatibility
+
+| Bevy Version | Crates Version |
+|--------------|----------------|
+| 0.10.0       | 0.1.6          |
+| 0.9.0        | 0.1.5          |
+
 ## Demo
 
 ![Demo Gif](data/demo.gif)

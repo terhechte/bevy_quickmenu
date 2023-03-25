@@ -1,6 +1,6 @@
 use super::Widget;
 use crate::style::StyleEntry;
-use crate::types::{ButtonComponent, MenuAssets, WidgetLabel, WidgetId};
+use crate::types::{ButtonComponent, MenuAssets, WidgetId, WidgetLabel};
 use crate::{ActionTrait, MenuSelection, ScreenTrait};
 use bevy::prelude::*;
 

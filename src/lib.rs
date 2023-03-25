@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../Readme.md")]
 
 // pub mod helpers;
 mod navigation_menu;
@@ -115,17 +115,13 @@ where
             .insert_resource(Selections::default())
             .add_event::<NavigationEvent>()
             .add_event::<RedrawEvent>()
-            .add_system(systems::cleanup_system::<S>.run_if(resource_exists::<CleanUpUI>))
+            .add_system(systems::cleanup_system::<S>.run_if(resource_exists::<CleanUpUI>()))
             .add_systems((
-                    systems::mouse_system::<S>.run_if(resource_exists::<MenuState<S>>),
-                    systems::input_system::<S>.run_if(resource_exists::<MenuState<S>>),
-                    systems::redraw_system::<S>.run_if(resource_exists::<MenuState<S>>),
-                    systems::keyboard_input_system.run_if(resource_exists::<MenuState<S>>)
-                    )
-                )
-            // .add_systems((systems::cleanup_system::<S>).run_if(resource_exists::<CleanUpUI>))
-            // .add_systems((crate::systems::keyboard_input_system,crate::systems::input_system::<S>,crate::systems::mouse_system::<S>,crate::systems::redraw_system::<S>).run_if());
-            ;
+                systems::mouse_system::<S>.run_if(resource_exists::<MenuState<S>>()),
+                systems::input_system::<S>.run_if(resource_exists::<MenuState<S>>()),
+                systems::redraw_system::<S>.run_if(resource_exists::<MenuState<S>>()),
+                systems::keyboard_input_system.run_if(resource_exists::<MenuState<S>>()),
+            ));
     }
 }
 
@@ -183,9 +179,4 @@ where
     pub fn state(&self) -> &S::State {
         &self.menu.state
     }
-}
-
-/// Helper to only run a system in specific circumstances
-pub fn resource_exists<T: Resource>(resource: Option<Res<T>>) -> bool {
-    resource.is_some()
 }
