@@ -4,36 +4,37 @@
 //! It also shows how to get from the Settings to the game and back.
 //! Due to the way Bevy handles GameStates (which will soon be rewritten),
 //! composing menus and games looks a bit convoluted.
-use bevy::{ecs::schedule::ShouldRun, prelude::*, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 
 use bevy_quickmenu::{
     style::Stylesheet, ActionTrait, Menu, MenuIcon, MenuItem, MenuState, QuickMenuPlugin,
     ScreenTrait,
 };
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, States, Default)]
 enum GameState {
+    #[default]
     Settings,
     Game,
 }
 
 impl GameState {
-    fn is_game(state: Res<State<GameState>>) -> ShouldRun {
-        (state.current() == &GameState::Game).into()
+    fn is_game(state: Res<State<GameState>>) -> bool {
+        state.get() == &GameState::Game
     }
 
-    fn is_settings(state: Res<State<GameState>>) -> ShouldRun {
-        (state.current() == &GameState::Settings).into()
+    fn is_settings(state: Res<State<GameState>>) -> bool {
+        state.get() == &GameState::Settings
     }
 }
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup)
-        .add_state(GameState::Settings)
-        .add_plugin(settings::SettingsPlugin)
-        .add_plugin(game::Game)
+        .add_systems(Startup, setup)
+        .add_state::<GameState>()
+        .add_plugins(settings::SettingsPlugin)
+        .add_plugins(game::Game)
         .run();
 }
 
@@ -46,7 +47,7 @@ mod settings {
 
     /// This custom event can be emitted by the action handler (below) in order to
     /// process actions with access to the bevy ECS
-    #[derive(Debug)]
+    #[derive(Debug, Event)]
     enum MyEvent {
         CloseSettings,
     }
@@ -69,14 +70,12 @@ mod settings {
                 // Register a event that can be called from your action handler
                 .add_event::<MyEvent>()
                 // The plugin
-                .add_plugin(QuickMenuPlugin::<Screens>::new())
+                .add_plugins(QuickMenuPlugin::<Screens>::new())
                 // Some systems
-                .add_system_set(SystemSet::on_enter(GameState::Settings).with_system(setup_system))
-                .add_system_set(
-                    SystemSet::new()
-                        .with_run_criteria(GameState::is_settings)
-                        .with_system(event_reader)
-                        .with_system(update_gamepads_system),
+                .add_systems(OnEnter(GameState::Settings), setup_system)
+                .add_systems(
+                    Update,
+                    (event_reader, update_gamepads_system).run_if(GameState::is_settings),
                 );
         }
     }
@@ -213,10 +212,7 @@ mod settings {
     }
 
     /// This is displayed if the user selects a player in the `controls_menu`
-    fn player_controls_menu(
-        state: &CustomState,
-        player: usize,
-    ) -> Menu<Screens> {
+    fn player_controls_menu(state: &CustomState, player: usize) -> Menu<Screens> {
         let selected_control = state.controls[&player];
         // Get the Keyboards
         let mut entries: Vec<_> = vec![
@@ -249,13 +245,13 @@ mod settings {
     fn event_reader(
         mut commands: Commands,
         mut event_reader: EventReader<MyEvent>,
-        mut state: ResMut<State<GameState>>,
+        mut next_state: ResMut<NextState<GameState>>,
     ) {
         for event in event_reader.iter() {
             match event {
                 MyEvent::CloseSettings => {
                     bevy_quickmenu::cleanup(&mut commands);
-                    state.set(GameState::Game).unwrap();
+                    next_state.set(GameState::Game);
                 }
             }
         }
@@ -350,9 +346,9 @@ mod game {
     pub struct Game;
     impl Plugin for Game {
         fn build(&self, app: &mut App) {
-            app.add_system_set(SystemSet::on_enter(GameState::Game).with_system(setup_system))
-                .add_system(detect_close_system.with_run_criteria(GameState::is_game))
-                .run();
+            app.add_systems(OnEnter(GameState::Game), setup_system)
+                .add_systems(Update, detect_close_system.run_if(GameState::is_game));
+            // .run();
         }
     }
 
@@ -371,11 +367,8 @@ mod game {
             )
             .with_style(Style {
                 position_type: PositionType::Absolute,
-                position: UiRect {
-                    top: Val::Px(60.0),
-                    left: Val::Px(50.0),
-                    ..default()
-                },
+                top: Val::Px(60.0),
+                left: Val::Px(50.0),
                 ..default()
             }),))
             .insert(GameComponent);
@@ -384,14 +377,14 @@ mod game {
     fn detect_close_system(
         mut commands: Commands,
         keyboard_input: Res<Input<KeyCode>>,
-        mut state: ResMut<State<GameState>>,
+        mut next_state: ResMut<NextState<GameState>>,
         game_items: Query<Entity, With<GameComponent>>,
     ) {
         if keyboard_input.just_pressed(KeyCode::Return) {
             for entity in game_items.iter() {
                 commands.entity(entity).despawn_recursive();
             }
-            state.set(GameState::Settings).unwrap();
+            next_state.set(GameState::Settings);
         }
     }
 }

@@ -65,15 +65,15 @@ where
             })
             .with_children(|parent| {
                 let (selected_idx, selectables) = Self::current_selection(&id, items, selections);
-                
+
                 let selected = selectables[selected_idx].1.as_selection();
-                
+
                 let mut index = 0;
                 for item in items {
                     let is_label = matches!(item, MenuItem::Label(_, _));
                     let item_selection = item.as_selection();
                     let focussed = (selected == item_selection) && !is_label;
-                    
+
                     match item {
                         MenuItem::Screen(t, i, _) => Self::add_item(
                             assets,
@@ -127,7 +127,7 @@ where
                             });
                         }
                     };
-                    
+
                     // Only increase for menu elements, so the indexes pair up
                     // with the `selectables` indexes
                     if item_selection != MenuSelection::None {
@@ -217,7 +217,8 @@ where
                 if let Some(image_handle) = icon.resolve_icon(assets) {
                     parent.spawn(ImageBundle {
                         style: Style {
-                            size: style.icon_style.size,
+                            width: style.icon_style.width,
+                            height: style.icon_style.height,
                             margin: style.icon_style.padding,
                             ..default()
                         },

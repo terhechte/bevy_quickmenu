@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 use std::hash::Hash;
 
-
 use crate::ScreenTrait;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
@@ -45,7 +44,7 @@ pub struct Selections(pub HashMap<WidgetId, usize>);
 /// which are then processed by a system and applied to the menu.
 /// Navigation can be customized by sending these events into a
 /// `EventWriter<NavigationEvent>`
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Event)]
 pub enum NavigationEvent {
     Up,
     Down,
@@ -55,6 +54,7 @@ pub enum NavigationEvent {
 
 /// Whenever a state change in the `MenuState` is detected,
 /// this event is send in order to tell the UI to re-render itself
+#[derive(Event)]
 pub struct RedrawEvent;
 
 /// Create a menu with an identifier and a `Vec` of `MenuItem` entries
@@ -72,7 +72,6 @@ impl<S> Menu<S>
 where
     S: ScreenTrait + 'static,
 {
-
     pub fn new(id: impl Into<WidgetId>, entries: Vec<MenuItem<S>>) -> Self {
         let id = id.into();
         Self {
