@@ -133,7 +133,7 @@ pub fn mouse_system<S>(
     ) in &mut interaction_query
     {
         match *interaction {
-            Interaction::Clicked => {
+            Interaction::Pressed => {
                 // pop to the chosen selection stack entry
                 menu_state.menu.pop_to_selection(selection);
 

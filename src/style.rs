@@ -42,8 +42,10 @@ impl ControlState {
 
 #[derive(Debug, Clone)]
 pub struct IconStyle {
+    /// The width of the icon
+    pub width: Val,
     /// The size of the icon
-    pub size: Size,
+    pub height: Val,
     /// The padding
     pub padding: UiRect,
     /// An alternative foreground color
@@ -53,7 +55,8 @@ pub struct IconStyle {
 impl Default for IconStyle {
     fn default() -> Self {
         Self {
-            size: Size::new(Val::Px(32.0), Val::Px(32.0)),
+            width: Val::Px(32.0),
+            height: Val::Px(32.0),
             padding: UiRect::all(Val::Px(6.0)),
             tint_color: Color::WHITE,
         }
