@@ -28,6 +28,7 @@ bevy_quickmenu = "0.1.5"
 
 | Bevy Version | Crates Version |
 |--------------|----------------|
+| 0.11.0       | 0.2.0          |
 | 0.10.0       | 0.1.6          |
 | 0.9.0        | 0.1.5          |
 
@@ -92,7 +93,7 @@ enum Screens {
 
 impl ScreenTrait for Screens {
     type Action = Actions;
-    fn resolve(&self, state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+    fn resolve(&self, state: &mut CustomState) -> Menu<Screens> {
         match self {
             Screens::Root => root_menu(state),
             Screens::Controls => controls_menu(state),
@@ -108,7 +109,7 @@ impl ScreenTrait for Screens {
 A menu is just a function that returns a list of `MenuItem` to be displayed. Each menu needs to have a distinct id. The example shows how the `root` and the `sound` menu are defined.
 
 ``` rs
-fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+fn root_menu(_state: &mut CustomState) -> Menu<Screens> {
     Menu::new(
         Id::new("root"),
         vec![
@@ -120,7 +121,7 @@ fn root_menu(_state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
     )
 }
 
-fn sound_menu(state: &mut CustomState) -> Menu<Actions, Screens, CustomState> {
+fn sound_menu(state: &mut CustomState) -> Menu<Screens> {
     Menu::new(
         Id::new("sound"),
         vec![
@@ -167,7 +168,7 @@ impl Plugin for SettingsPlugin {
             // Register a event that can be called from your action handler
             .add_event::<BasicEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<BasicState, Actions, Screens>::new())
+            .add_plugins(QuickMenuPlugin::<Screens>::new())
             // Some systems
             .add_startup_system(setup)
             .add_system(event_reader);

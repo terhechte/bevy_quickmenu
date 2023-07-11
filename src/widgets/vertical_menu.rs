@@ -217,7 +217,8 @@ where
                 if let Some(image_handle) = icon.resolve_icon(assets) {
                     parent.spawn(ImageBundle {
                         style: Style {
-                            size: style.icon_style.size,
+                            width: style.icon_style.width,
+                            height: style.icon_style.height,
                             margin: style.icon_style.padding,
                             ..default()
                         },

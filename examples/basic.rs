@@ -11,13 +11,13 @@ use bevy_quickmenu::{
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(BasicPlugin)
+        .add_plugins(BasicPlugin)
         .run();
 }
 
 /// This custom event can be emitted by the action handler (below) in order to
 /// process actions with access to the bevy ECS
-#[derive(Debug)]
+#[derive(Debug, Event)]
 enum BasicEvent {
     Close,
 }
@@ -38,10 +38,10 @@ impl Plugin for BasicPlugin {
             // Register a event that can be called from your action handler
             .add_event::<BasicEvent>()
             // The plugin
-            .add_plugin(QuickMenuPlugin::<Screens>::new())
+            .add_plugins(QuickMenuPlugin::<Screens>::new())
             // Some systems
-            .add_startup_system(setup)
-            .add_system(event_reader);
+            .add_systems(Startup, setup)
+            .add_systems(Update, event_reader);
     }
 }
 
