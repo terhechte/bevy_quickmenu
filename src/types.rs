@@ -3,7 +3,7 @@ use std::hash::Hash;
 
 use crate::ScreenTrait;
 use bevy::prelude::*;
-use bevy::render::texture::{CompressedImageFormats, ImageType};
+use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::utils::HashMap;
 
 #[derive(Component)]
@@ -418,6 +418,7 @@ impl FromWorld for MenuAssets {
                         ImageType::Extension("png"),
                         CompressedImageFormats::empty(),
                         true,
+                        ImageSampler::Default,
                     )
                     .unwrap(),
                 ),

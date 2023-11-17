@@ -94,7 +94,7 @@ pub fn input_system<S>(
 ) where
     S: ScreenTrait + 'static,
 {
-    if let Some(event) = reader.iter().next() {
+    if let Some(event) = reader.read().next() {
         if let Some(selection) = menu_state.menu.apply_event(event, &mut selections) {
             menu_state
                 .menu

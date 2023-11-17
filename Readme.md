@@ -27,7 +27,8 @@ bevy_quickmenu = "0.1.5"
 ### Version Compatibility
 
 | Bevy Version | Crates Version |
-|--------------|----------------|
+| ------------ | -------------- |
+| 0.11.0       | 0.3.0          |
 | 0.11.0       | 0.2.0          |
 | 0.10.0       | 0.1.6          |
 | 0.9.0        | 0.1.5          |
@@ -53,7 +54,7 @@ Whenever this state changes, the menu is automatically redrawn.
 
 (Conforms to `ActionTrait`): This enum defines all the actions your user can take. Such as `SoundOn`, `SoundOff` etc. When a user performs an action (by selecting the corresponding menu entry), the `handle` method is called on your `ActionTrait` implementation. `ActionTrait` has two generic types: Your `State` as well as a `Event` which you can define. This allows you to handle your action:
 
-``` rs
+```rs
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Actions {
     Close,
@@ -80,9 +81,9 @@ impl ActionTrait for Actions {
 
 ## `Screen`
 
-(Conforms to the `ScreenTrait`). Each page or screen in your menu is defined by this enum. Note that menu screens are *not nested*!. Instead the `ScreenTrait` has a `resolve` function that allows you to return the corresponding menu definition for the given enum:
+(Conforms to the `ScreenTrait`). Each page or screen in your menu is defined by this enum. Note that menu screens are _not nested_!. Instead the `ScreenTrait` has a `resolve` function that allows you to return the corresponding menu definition for the given enum:
 
-``` rs
+```rs
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Screens {
     Root,
@@ -108,7 +109,7 @@ impl ScreenTrait for Screens {
 
 A menu is just a function that returns a list of `MenuItem` to be displayed. Each menu needs to have a distinct id. The example shows how the `root` and the `sound` menu are defined.
 
-``` rs
+```rs
 fn root_menu(_state: &mut CustomState) -> Menu<Screens> {
     Menu::new(
         Id::new("root"),
@@ -135,7 +136,7 @@ fn sound_menu(state: &mut CustomState) -> Menu<Screens> {
 
 ## `MenuItem`
 
-In order to give you *some* flexibility, the menu item allows you to return five different types:
+In order to give you _some_ flexibility, the menu item allows you to return five different types:
 
 - `MenuItem::label`: A small text label that cannot be selected
 - `MenuItem::headline`: A big text label that cannot be selected
@@ -145,14 +146,14 @@ In order to give you *some* flexibility, the menu item allows you to return five
 
 In addition, a menu-item can have one of a couple of pre-defined icons or a custom icon
 
-``` rs
+```rs
 MenuItem::screen("Controls", Screens::Controls).with_icon(MenuIcon::Controls)
 MenuItem::screen("Save", Screens::Save).with_icon(MenuIcon::Other(icons.save.clone()))
 ```
 
 `MenuItem`s can also be checked or unchecked:
 
-``` rs
+```rs
 MenuItem::action("On", Actions::SoundOn).checked(state.sound_on)
 MenuItem::action("Off", Actions::SoundOff).checked(!state.sound_on)
 ```
@@ -161,7 +162,7 @@ MenuItem::action("Off", Actions::SoundOff).checked(!state.sound_on)
 
 Here's a the annoated setup function from the example:
 
-``` rs
+```rs
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
         app
@@ -190,7 +191,7 @@ fn setup(mut commands: Commands) {
 In order to remove a menu, there's the `bevy_quickmenu::cleanup` function. Usually, it is best
 to use it with the event that Bevy Quickmenu allows you to register:
 
-``` rs
+```rs
 #[derive(Debug)]
 enum BasicEvent {
     Close,
@@ -205,7 +206,7 @@ impl ActionTrait for Actions {
 }
 
 fn event_reader(mut commands: Commands, mut event_reader: EventReader<BasicEvent>) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         match event {
             BasicEvent::Close => bevy_quickmenu::cleanup(&mut commands),
         }
