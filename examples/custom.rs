@@ -165,7 +165,7 @@ fn boolean_menu(state: &BasicState) -> Menu<Screens> {
 /// This allows to react to actions with custom bevy resources or eventwriters or queries.
 /// In this example we use it to close the menu
 fn event_reader(mut commands: Commands, mut event_reader: EventReader<BasicEvent>) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         match event {
             BasicEvent::Close => bevy_quickmenu::cleanup(&mut commands),
         }

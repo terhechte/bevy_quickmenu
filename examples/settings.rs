@@ -109,7 +109,7 @@ mod settings {
         menu_state: Option<ResMut<MenuState<Screens>>>,
     ) {
         let Some(mut menu_state) = menu_state else {
-            return
+            return;
         };
         let gamepads = gamepads
             .iter()
@@ -247,7 +247,7 @@ mod settings {
         mut event_reader: EventReader<MyEvent>,
         mut next_state: ResMut<NextState<GameState>>,
     ) {
-        for event in event_reader.iter() {
+        for event in event_reader.read() {
             match event {
                 MyEvent::CloseSettings => {
                     bevy_quickmenu::cleanup(&mut commands);
