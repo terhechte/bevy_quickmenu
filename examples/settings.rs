@@ -38,7 +38,7 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands) {                                                                                                  
+fn setup(mut commands: Commands) {
     commands.spawn(Camera3dBundle::default());
 }
 
@@ -140,9 +140,15 @@ mod settings {
         type Event = MyEvent;
         fn handle(&self, state: &mut CustomState, event_writer: &mut EventWriter<MyEvent>) {
             match self {
-                Actions::Close => { event_writer.send(MyEvent::CloseSettings); },
-                Actions::SoundOn => { state.sound_on = true; },
-                Actions::SoundOff => { state.sound_on = false; },
+                Actions::Close => {
+                    event_writer.send(MyEvent::CloseSettings);
+                }
+                Actions::SoundOn => {
+                    state.sound_on = true;
+                }
+                Actions::SoundOff => {
+                    state.sound_on = false;
+                }
                 Actions::Control(p, d) => {
                     state.controls.insert(*p, *d);
                 }

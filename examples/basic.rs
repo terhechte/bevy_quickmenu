@@ -71,9 +71,15 @@ impl ActionTrait for Actions {
     type Event = BasicEvent;
     fn handle(&self, state: &mut BasicState, event_writer: &mut EventWriter<BasicEvent>) {
         match self {
-            Actions::Close => { event_writer.send(BasicEvent::Close); },
-            Actions::Toggle1 => { state.boolean1 = !state.boolean1; },
-            Actions::Toggle2 => { state.boolean2 = !state.boolean2; },
+            Actions::Close => {
+                event_writer.send(BasicEvent::Close);
+            }
+            Actions::Toggle1 => {
+                state.boolean1 = !state.boolean1;
+            }
+            Actions::Toggle2 => {
+                state.boolean2 = !state.boolean2;
+            }
         }
     }
 }

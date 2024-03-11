@@ -415,13 +415,12 @@ impl FromWorld for MenuAssets {
                 Some(image) => assets.load(image),
                 None => world.get_resource_mut::<Assets<Image>>().unwrap().add(
                     Image::from_buffer(
-
                         else_bytes,
-                            ImageType::Extension("png"),
+                        ImageType::Extension("png"),
                         CompressedImageFormats::empty(),
                         true,
                         ImageSampler::Default,
-                        RenderAssetUsages::default()
+                        RenderAssetUsages::default(),
                     )
                     .unwrap(),
                 ),
