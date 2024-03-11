@@ -1,6 +1,6 @@
 [package]
 name = "bevy_quickmenu"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Benedikt Terhechte"]
 description = "A simple way of quickly creating nested menus in bevy that can be navigated with keys, gamepads and pointers"
@@ -14,7 +14,7 @@ exclude = ["data", "assets", ".vscode", "icons.sketch", ".DS_Store"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.12.0", default-features = false, features = [
+bevy = { version = "0.13.0", default-features = false, features = [
     "bevy_ui",
     "bevy_render",
     "bevy_asset",
@@ -23,4 +23,4 @@ bevy = { version = "0.12.0", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-bevy = "0.12"
+bevy = "0.13"

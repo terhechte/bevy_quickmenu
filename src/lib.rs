@@ -197,15 +197,15 @@ where
             .add_event::<RedrawEvent>()
             .add_systems(
                 Update,
-                systems::cleanup_system::<S>.run_if(resource_exists::<CleanUpUI>()),
+                systems::cleanup_system::<S>.run_if(resource_exists::<CleanUpUI>),
             )
             .add_systems(
                 Update,
                 (
-                    systems::mouse_system::<S>.run_if(resource_exists::<MenuState<S>>()),
-                    systems::input_system::<S>.run_if(resource_exists::<MenuState<S>>()),
-                    systems::redraw_system::<S>.run_if(resource_exists::<MenuState<S>>()),
-                    systems::keyboard_input_system.run_if(resource_exists::<MenuState<S>>()),
+                    systems::mouse_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::input_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::redraw_system::<S>.run_if(resource_exists::<MenuState<S>>),
+                    systems::keyboard_input_system.run_if(resource_exists::<MenuState<S>>),
                 ),
             );
     }
