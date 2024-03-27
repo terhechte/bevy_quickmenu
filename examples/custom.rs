@@ -99,9 +99,15 @@ impl ActionTrait for Actions {
     type Event = BasicEvent;
     fn handle(&self, state: &mut BasicState, event_writer: &mut EventWriter<BasicEvent>) {
         match self {
-            Actions::Close => event_writer.send(BasicEvent::Close),
-            Actions::Toggle1 => state.boolean1 = !state.boolean1,
-            Actions::Toggle2 => state.boolean2 = !state.boolean2,
+            Actions::Close => {
+                event_writer.send(BasicEvent::Close);
+            }
+            Actions::Toggle1 => {
+                state.boolean1 = !state.boolean1;
+            }
+            Actions::Toggle2 => {
+                state.boolean2 = !state.boolean2;
+            }
         }
     }
 }
@@ -165,7 +171,7 @@ fn boolean_menu(state: &BasicState) -> Menu<Screens> {
 /// This allows to react to actions with custom bevy resources or eventwriters or queries.
 /// In this example we use it to close the menu
 fn event_reader(mut commands: Commands, mut event_reader: EventReader<BasicEvent>) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         match event {
             BasicEvent::Close => bevy_quickmenu::cleanup(&mut commands),
         }

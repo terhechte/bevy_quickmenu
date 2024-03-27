@@ -6,20 +6,20 @@ use crate::{
 };
 
 pub fn keyboard_input_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut writer: EventWriter<NavigationEvent>,
     gamepads: Res<Gamepads>,
-    button_inputs: Res<Input<GamepadButton>>,
+    button_inputs: Res<ButtonInput<GamepadButton>>,
     axes: Res<Axis<GamepadAxis>>,
 ) {
     use NavigationEvent::*;
-    if keyboard_input.just_pressed(KeyCode::Down) {
+    if keyboard_input.just_pressed(KeyCode::ArrowDown) {
         writer.send(Down);
-    } else if keyboard_input.just_pressed(KeyCode::Up) {
+    } else if keyboard_input.just_pressed(KeyCode::ArrowUp) {
         writer.send(Up);
-    } else if keyboard_input.just_pressed(KeyCode::Return) {
+    } else if keyboard_input.just_pressed(KeyCode::Enter) {
         writer.send(Select);
-    } else if keyboard_input.just_pressed(KeyCode::Back) {
+    } else if keyboard_input.just_pressed(KeyCode::Backspace) {
         writer.send(Back);
     }
 
@@ -94,7 +94,7 @@ pub fn input_system<S>(
 ) where
     S: ScreenTrait + 'static,
 {
-    if let Some(event) = reader.iter().next() {
+    if let Some(event) = reader.read().next() {
         if let Some(selection) = menu_state.menu.apply_event(event, &mut selections) {
             menu_state
                 .menu

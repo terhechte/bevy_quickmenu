@@ -32,7 +32,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         .add_plugins(settings::SettingsPlugin)
         .add_plugins(game::Game)
         .run();
@@ -109,7 +109,7 @@ mod settings {
         menu_state: Option<ResMut<MenuState<Screens>>>,
     ) {
         let Some(mut menu_state) = menu_state else {
-            return
+            return;
         };
         let gamepads = gamepads
             .iter()
@@ -140,9 +140,15 @@ mod settings {
         type Event = MyEvent;
         fn handle(&self, state: &mut CustomState, event_writer: &mut EventWriter<MyEvent>) {
             match self {
-                Actions::Close => event_writer.send(MyEvent::CloseSettings),
-                Actions::SoundOn => state.sound_on = true,
-                Actions::SoundOff => state.sound_on = false,
+                Actions::Close => {
+                    event_writer.send(MyEvent::CloseSettings);
+                }
+                Actions::SoundOn => {
+                    state.sound_on = true;
+                }
+                Actions::SoundOff => {
+                    state.sound_on = false;
+                }
                 Actions::Control(p, d) => {
                     state.controls.insert(*p, *d);
                 }
@@ -247,7 +253,7 @@ mod settings {
         mut event_reader: EventReader<MyEvent>,
         mut next_state: ResMut<NextState<GameState>>,
     ) {
-        for event in event_reader.iter() {
+        for event in event_reader.read() {
             match event {
                 MyEvent::CloseSettings => {
                     bevy_quickmenu::cleanup(&mut commands);
@@ -300,9 +306,9 @@ mod settings {
                 title: "Keyboard 1",
                 description: "Left / Right + M",
                 keyboard_id: 42001,
-                left: KeyCode::Left,
-                right: KeyCode::Right,
-                action: KeyCode::M,
+                left: KeyCode::ArrowLeft,
+                right: KeyCode::ArrowRight,
+                action: KeyCode::KeyM,
             }
         }
 
@@ -311,9 +317,9 @@ mod settings {
                 title: "Keyboard 2",
                 description: "A / D + B",
                 keyboard_id: 42002,
-                left: KeyCode::A,
-                right: KeyCode::D,
-                action: KeyCode::B,
+                left: KeyCode::KeyA,
+                right: KeyCode::KeyD,
+                action: KeyCode::KeyB,
             }
         }
         pub fn keyboard3() -> ControlDevice {
@@ -321,9 +327,9 @@ mod settings {
                 title: "Keyboard 3",
                 description: "I / O + K",
                 keyboard_id: 42003,
-                left: KeyCode::I,
-                right: KeyCode::O,
-                action: KeyCode::K,
+                left: KeyCode::KeyI,
+                right: KeyCode::KeyO,
+                action: KeyCode::KeyK,
             }
         }
         pub fn keyboard4() -> ControlDevice {
@@ -331,9 +337,9 @@ mod settings {
                 title: "Keyboard 4",
                 description: "T / Y + H",
                 keyboard_id: 42004,
-                left: KeyCode::T,
-                right: KeyCode::Y,
-                action: KeyCode::H,
+                left: KeyCode::KeyT,
+                right: KeyCode::KeyY,
+                action: KeyCode::KeyH,
             }
         }
     }
@@ -376,11 +382,11 @@ mod game {
 
     fn detect_close_system(
         mut commands: Commands,
-        keyboard_input: Res<Input<KeyCode>>,
+        keyboard_input: Res<ButtonInput<KeyCode>>,
         mut next_state: ResMut<NextState<GameState>>,
         game_items: Query<Entity, With<GameComponent>>,
     ) {
-        if keyboard_input.just_pressed(KeyCode::Return) {
+        if keyboard_input.just_pressed(KeyCode::Enter) {
             for entity in game_items.iter() {
                 commands.entity(entity).despawn_recursive();
             }
