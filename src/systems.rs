@@ -8,9 +8,7 @@ use crate::{
 pub fn keyboard_input_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut writer: EventWriter<NavigationEvent>,
-    gamepads: Res<Gamepads>,
-    button_inputs: Res<ButtonInput<GamepadButton>>,
-    axes: Res<Axis<GamepadAxis>>,
+    gamepads: Query<&Gamepad>,
 ) {
     use NavigationEvent::*;
     if keyboard_input.just_pressed(KeyCode::ArrowDown) {
@@ -24,37 +22,35 @@ pub fn keyboard_input_system(
     }
 
     for gamepad in gamepads.iter() {
-        if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadDown)) {
+        if gamepad.just_pressed( GamepadButton::DPadDown) {
             writer.send(Down);
-        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadUp))
+        } else if gamepad.just_pressed( GamepadButton::DPadUp)
         {
             writer.send(Up);
-        } else if button_inputs
-            .just_pressed(GamepadButton::new(gamepad, GamepadButtonType::DPadRight))
+        } else if gamepad
+            .just_pressed(GamepadButton::DPadRight)
         {
             writer.send(Back);
-        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::South))
-            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::West))
+        } else if gamepad.just_pressed(GamepadButton::South)
+            || gamepad.just_pressed(GamepadButton::West)
         {
             writer.send(Select);
-        } else if button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::East))
-            || button_inputs.just_pressed(GamepadButton::new(gamepad, GamepadButtonType::North))
+        } else if gamepad.just_pressed(GamepadButton::East)
+            || gamepad.just_pressed(GamepadButton::North)
         {
             writer.send(Back);
         }
-        if axes.is_changed() {
-            for (axis, check_negative, action) in [
-                (GamepadAxisType::LeftStickX, true, Back),
-                (GamepadAxisType::LeftStickY, true, Down),
-                (GamepadAxisType::LeftStickY, false, Up),
-                (GamepadAxisType::RightStickX, true, Back),
-                (GamepadAxisType::RightStickY, true, Down),
-                (GamepadAxisType::RightStickY, false, Up),
-            ] {
-                if let Some(value) = axes.get(GamepadAxis::new(gamepad, axis)) {
-                    if (check_negative && value < -0.1) || (!check_negative && value > 0.1) {
-                        writer.send(action);
-                    }
+        for (axis, check_negative, action) in [
+            (GamepadAxis::LeftStickX, true, Back),
+            (GamepadAxis::LeftStickY, true, Down),
+            (GamepadAxis::LeftStickY, false, Up),
+            (GamepadAxis::RightStickX, true, Back),
+            (GamepadAxis::RightStickY, true, Down),
+            (GamepadAxis::RightStickY, false, Up),
+        ] {
+            if let Some(value) = gamepad.get(axis) {
+                if (check_negative && value < -0.1) || (!check_negative && value > 0.1) {
+                    writer.send(action);
                 }
             }
         }

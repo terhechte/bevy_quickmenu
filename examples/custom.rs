@@ -66,15 +66,15 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut button_style = StyleEntry::button();
     button_style.size = 25.0;
     button_style.selected = ControlState {
-        fg: Color::YELLOW,
-        bg: Color::RED,
+        fg: Color::srgb(1.0, 1.0, 0.0),
+        bg: Color::srgb(1.0, 0.0, 0.0),
     };
 
     let sheet = Stylesheet {
         button: button_style,
         ..Default::default()
     }
-    .with_background(BackgroundColor(Color::BISQUE));
+    .with_background(BackgroundColor(Color::srgb(1.0, 0.89, 0.77)));
 
     // Load custom icons
     let state = BasicState {
@@ -138,8 +138,8 @@ fn root_menu(state: &BasicState) -> Menu<Screens> {
         vec![
             MenuItem::headline([
                 RichTextEntry::new("Rich "),
-                RichTextEntry::new_color("Text ", Color::RED),
-                RichTextEntry::new_color("!", Color::YELLOW),
+                RichTextEntry::new_color("Text ", Color::srgb(1.0,0.0,0.0)),
+                RichTextEntry::new_color("!", Color::srgb(1.0, 1.0, 0.0)),
             ]),
             MenuItem::action("Close", Actions::Close).with_icon(MenuIcon::Back),
             MenuItem::label("Use a custom Icon"),
@@ -160,8 +160,8 @@ fn boolean_menu(state: &BasicState) -> Menu<Screens> {
             MenuItem::action("Toggle Boolean 2", Actions::Toggle2).checked(state.boolean2),
         ],
     )
-    .with_background(BackgroundColor(Color::NAVY))
-    .with_style(Style {
+    .with_background(BackgroundColor(Color::srgb(0.0,0.0,0.5)))
+    .with_style(Node {
         align_items: AlignItems::FlexEnd,
         flex_direction: FlexDirection::Column,
         ..Default::default()
