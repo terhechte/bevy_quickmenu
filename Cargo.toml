@@ -1,6 +1,6 @@
 [package]
 name = "bevy_quickmenu"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["Benedikt Terhechte"]
 description = "A simple way of quickly creating nested menus in bevy that can be navigated with keys, gamepads and pointers"
