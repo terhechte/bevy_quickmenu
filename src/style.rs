@@ -15,26 +15,26 @@ impl ControlState {
     fn clear(fg: Color) -> Self {
         Self {
             fg,
-            bg: Color::rgba(0.0, 0.0, 0.0, 0.0),
+            bg: Color::srgba(0.0, 0.0, 0.0, 0.0),
         }
     }
     fn normal() -> Self {
         Self {
             fg: Color::WHITE,
-            bg: Color::NAVY,
+            bg: Color::srgb(0.0, 0.0, 0.5),
         }
     }
 
     fn hover() -> Self {
         Self {
-            fg: Color::YELLOW,
-            bg: Color::NAVY,
+            fg: Color::srgb(1.0, 1.0, 0.0),
+            bg: Color::srgb(0.0, 0.0, 0.5),
         }
     }
 
     fn selected() -> Self {
         Self {
-            fg: Color::NAVY,
+            fg: Color::srgb(0.0, 0.0, 0.5),
             bg: Color::WHITE,
         }
     }
@@ -88,7 +88,7 @@ impl StyleEntry {
     }
 
     pub fn label() -> Self {
-        let gray = Color::rgb(0.7, 0.7, 0.7);
+        let gray = Color::srgb(0.7, 0.7, 0.7);
         Self {
             size: 18.0,
             margin: UiRect::all(Val::Px(5.0)),
