@@ -1,10 +1,11 @@
 use std::borrow::Cow;
+use std::collections::VecDeque;
 use std::hash::Hash;
 
 use crate::ScreenTrait;
 use bevy::prelude::*;
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
+use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::utils::HashMap;
 
 #[derive(Component)]
@@ -65,7 +66,7 @@ where
 {
     pub id: WidgetId,
     pub entries: Vec<MenuItem<S>>,
-    pub style: Option<Style>,
+    pub style: Option<Node>,
     pub background: Option<BackgroundColor>,
 }
 
@@ -88,7 +89,7 @@ where
         self
     }
 
-    pub fn with_style(mut self, style: Style) -> Self {
+    pub fn with_style(mut self, style: Node) -> Self {
         self.style = Some(style);
         self
     }
@@ -104,7 +105,7 @@ where
     Action(WidgetLabel, MenuIcon, S::Action),
     Label(WidgetLabel, MenuIcon),
     Headline(WidgetLabel, MenuIcon),
-    Image(Handle<Image>, Option<Style>),
+    Image(Handle<Image>, Option<Node>),
 }
 
 impl<S> MenuItem<S>
@@ -297,23 +298,25 @@ pub enum WidgetLabel {
 }
 
 impl WidgetLabel {
-    pub fn bundle(&self, default_style: &TextStyle) -> TextBundle {
+    pub fn bundle(&self, default_style: &TextFont, default_color: &Color) -> ((Text, TextFont, TextColor), VecDeque<(TextSpan, TextFont, TextColor)>) {
         match self {
-            Self::PlainText(text) => TextBundle::from_section(text, default_style.clone()),
-            Self::RichText(entries) => TextBundle::from_sections(entries.iter().map(|entry| {
-                TextSection {
-                    value: entry.text.clone(),
-                    style: TextStyle {
+            Self::PlainText(text) => ((Text::new(text), default_style.clone(), default_color.clone().into()), VecDeque::new()),
+            Self::RichText(entries) => (
+                (Text::new(""), default_style.clone(), default_color.clone().into() ),
+                entries.iter().map(|entry| (
+                    TextSpan::new(entry.text.clone()),
+                    TextFont {
                         font: entry
                             .font
                             .as_ref()
                             .cloned()
                             .unwrap_or_else(|| default_style.font.clone()),
                         font_size: entry.size.unwrap_or(default_style.font_size),
-                        color: entry.color.unwrap_or(default_style.color),
+                        ..Default::default()
                     },
-                }
-            })),
+                    entry.color.clone().unwrap_or(default_color.clone()).into(),
+                )).collect(),
+            )
         }
     }
 

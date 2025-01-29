@@ -19,12 +19,12 @@ where
     pub id: WidgetId,
     // The items in the menu
     pub items: &'a [MenuItem<S>],
-    // Our Stylesheet
+    // Our Nodesheet
     pub stylesheet: &'a Stylesheet,
     // Assets
     pub assets: &'a MenuAssets,
-    // Overriding Bevy Style
-    pub style: Option<&'a Style>,
+    // Overriding Bevy Node
+    pub style: Option<&'a Node>,
     // Overriding Bevy Background Color
     pub background: Option<&'a BackgroundColor>,
 }
@@ -44,8 +44,8 @@ where
         if items.is_empty() {
             return;
         }
-
-        let style = self.style.cloned().unwrap_or_else(|| Style {
+        
+        let style = self.style.cloned().unwrap_or_else(|| Node {
             align_items: AlignItems::FlexStart,
             flex_direction: FlexDirection::Column,
             padding: UiRect::all(Val::Px(stylesheet.vertical_spacing)),
@@ -53,16 +53,15 @@ where
         });
 
         let background_color = self
-            .background
-            .cloned()
-            .unwrap_or_else(|| Color::NONE.into());
-
-        builder
-            .spawn(NodeBundle {
+        .background
+        .cloned()
+        .unwrap_or_else(|| Color::NONE.into());
+    
+    builder
+            .spawn((
                 style,
                 background_color,
-                ..default()
-            })
+            ))
             .with_children(|parent| {
                 let (selected_idx, selectables) = Self::current_selection(&id, items, selections);
 
@@ -116,15 +115,17 @@ where
                             LabelWidget::new(t, &stylesheet.headline),
                         ),
                         MenuItem::Image(i, s) => {
-                            let style = s.clone().unwrap_or_else(|| Style {
+                            let style = s.clone().unwrap_or_else(|| Node {
                                 align_self: AlignSelf::Center,
                                 ..Default::default()
                             });
-                            parent.spawn(ImageBundle {
+                            parent.spawn((
+                                ImageNode {
+                                    image: i.clone().into(),
+                                    ..Default::default()
+                                },
                                 style,
-                                image: i.clone().into(),
-                                ..Default::default()
-                            });
+                            ));
                         }
                     };
 
@@ -205,27 +206,26 @@ where
         widget: impl Widget,
     ) {
         parent
-            .spawn(NodeBundle {
-                style: Style {
-                    align_items: AlignItems::Center,
-                    flex_direction: FlexDirection::Row,
-                    ..default()
-                },
+            .spawn(Node {
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Row,
                 ..default()
             })
             .with_children(|parent| {
                 if let Some(image_handle) = icon.resolve_icon(assets) {
-                    parent.spawn(ImageBundle {
-                        style: Style {
+                    parent.spawn((
+                        ImageNode {
+                            image: image_handle.into(),
+                            ..Default::default()
+                        },
+                        Node {
                             width: style.icon_style.width,
                             height: style.icon_style.height,
                             margin: style.icon_style.padding,
                             ..default()
                         },
-                        image: image_handle.into(),
-                        background_color: BackgroundColor(style.icon_style.tint_color),
-                        ..Default::default()
-                    });
+                        BackgroundColor(style.icon_style.tint_color),
+                    ));
                 }
                 widget.build(parent, assets);
             });

@@ -161,7 +161,7 @@ fn boolean_menu(state: &BasicState) -> Menu<Screens> {
         ],
     )
     .with_background(BackgroundColor(Color::srgb(0.0,0.0,0.5)))
-    .with_style(Style {
+    .with_style(Node {
         align_items: AlignItems::FlexEnd,
         flex_direction: FlexDirection::Column,
         ..Default::default()

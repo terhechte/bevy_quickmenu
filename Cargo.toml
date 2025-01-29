@@ -14,7 +14,7 @@ exclude = ["data", "assets", ".vscode", "icons.sketch", ".DS_Store"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.14.0", default-features = false, features = [
+bevy = { version = "0.15.0", default-features = false, features = [
     "bevy_ui",
     "bevy_render",
     "bevy_asset",
@@ -23,4 +23,4 @@ bevy = { version = "0.14.0", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-bevy = "0.14"
+bevy = "0.15"

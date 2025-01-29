@@ -52,7 +52,7 @@ where
             .style
             .as_ref()
             .cloned()
-            .unwrap_or_else(|| Style {
+            .unwrap_or_else(|| Node {
                 align_items: AlignItems::FlexStart,
                 flex_direction: FlexDirection::Row,
                 padding: UiRect::all(Val::Px(self.stylesheet.vertical_spacing)),
@@ -65,11 +65,10 @@ where
             .unwrap_or_else(|| Color::NONE.into());
 
         commands
-            .spawn(NodeBundle {
+            .spawn((
                 style,
                 background_color,
-                ..default()
-            })
+            ))
             .insert(PrimaryMenu)
             .with_children(|parent| {
                 for entry in self.stack.iter() {

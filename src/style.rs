@@ -3,7 +3,7 @@
 //! styles are mostly used to define the looks of menus and the different
 //! control states of buttons.
 
-use bevy::prelude::*;
+use bevy::{prelude::*, text::FontSmoothing};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ControlState {
@@ -66,6 +66,7 @@ impl Default for IconStyle {
 #[derive(Debug, Clone)]
 pub struct StyleEntry {
     pub size: f32,
+    pub smoothing: FontSmoothing,
     pub margin: UiRect,
     pub padding: UiRect,
     pub normal: ControlState,
@@ -78,6 +79,7 @@ impl StyleEntry {
     pub fn button() -> Self {
         Self {
             size: 20.0,
+            smoothing: FontSmoothing::AntiAliased,
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::normal(),
@@ -91,6 +93,7 @@ impl StyleEntry {
         let gray = Color::srgb(0.7, 0.7, 0.7);
         Self {
             size: 18.0,
+            smoothing: FontSmoothing::AntiAliased,
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::clear(gray),
@@ -102,7 +105,8 @@ impl StyleEntry {
 
     pub fn headline() -> Self {
         Self {
-            size: 24.0,
+            size: 24.0,            
+            smoothing: FontSmoothing::AntiAliased,
             margin: UiRect::all(Val::Px(5.0)),
             padding: UiRect::all(Val::Px(5.0)),
             normal: ControlState::clear(Color::WHITE),
@@ -119,7 +123,7 @@ pub struct Stylesheet {
     pub label: StyleEntry,
     pub headline: StyleEntry,
     pub vertical_spacing: f32,
-    pub style: Option<Style>,
+    pub style: Option<Node>,
     pub background: Option<BackgroundColor>,
 }
 
@@ -142,7 +146,7 @@ impl Stylesheet {
         self
     }
 
-    pub fn with_style(mut self, style: Style) -> Self {
+    pub fn with_style(mut self, style: Node) -> Self {
         self.style = Some(style);
         self
     }
